@@ -403,7 +403,7 @@ window.SITE_DATA = {
       "id": "screen-composition-in-motion",
       "title": "Screen Composition in Motion: Barycenter Dynamics in Kamen Rider and Super Sentai",
       "year": "2026",
-      "status": "ongoing",
+      "status": "completed",
       "themes": [
         "data"
       ],
