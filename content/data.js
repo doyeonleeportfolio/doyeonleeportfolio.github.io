@@ -78,7 +78,7 @@ window.SITE_DATA = {
     },
     {
       "id": "pompeii-heritage-xr-reseravtion-galaxy-xr",
-      "title": "Pompeii Heritage XR Reseravtion - Galaxy XR",
+      "title": "Pompeii Heritage XR Reservation - Galaxy XR",
       "year": "2026",
       "cover": "",
       "media": [
