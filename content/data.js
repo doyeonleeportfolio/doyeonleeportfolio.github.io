@@ -519,6 +519,17 @@ window.SITE_DATA = {
       "href": "",
       "image": "",
       "related": []
+    },
+    {
+      "id": "recipient-of-the-bang-jeong-hwan-academic-excellence-scholarship-2",
+      "date": "2024-11",
+      "kind": "scholarship",
+      "title": "Recipient of the Bang Jeong-Hwan Academic Excellence Scholarship",
+      "venue": "",
+      "note": "",
+      "href": "",
+      "image": "",
+      "related": []
     }
   ],
   "studiesGif": "content/media/studies/giphy.gif"
