@@ -530,6 +530,28 @@ window.SITE_DATA = {
       "href": "",
       "image": "",
       "related": []
+    },
+    {
+      "id": "vice-president-college-of-future-talents-dswu",
+      "date": "2025",
+      "kind": "service",
+      "title": "Vice President | College of Future Talents, DSWU",
+      "venue": "",
+      "note": "",
+      "href": "",
+      "image": "",
+      "related": []
+    },
+    {
+      "id": "opcd-color-the-beat-mewmung",
+      "date": "2026-09",
+      "kind": "residency",
+      "title": "OPCD-Color the Beat | MEWMUNG - 돌 징검다리",
+      "venue": "",
+      "note": "",
+      "href": "https://youtu.be/c4cFc5baHug?si=fxPj1qstkHAhrwbS",
+      "image": "content/media/opcd-color-the-beat-mewmung/스크린샷-2026-09-21-224107.png",
+      "related": []
     }
   ],
   "studiesGif": "content/media/studies/giphy.gif"
