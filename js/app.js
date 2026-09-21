@@ -440,12 +440,12 @@
 
   var NEWS_KINDS = {
     award: 'Award',
+    scholarship: 'Scholarship',
     conference: 'Conference',
     talk: 'Talk',
     exhibition: 'Exhibition',
     press: 'Press',
-    residency: 'Residency',
-    other: 'Activity'
+    residency: 'Residency'
   };
 
   function pad2(v) {
@@ -513,7 +513,7 @@
       } else {
         main.appendChild(el('div', 'news-title', n.title || ''));
       }
-      var sub = [NEWS_KINDS[String(n.kind || 'other').toLowerCase()] || NEWS_KINDS.other, n.venue].filter(Boolean);
+      var sub = [NEWS_KINDS[String(n.kind || '').toLowerCase()] || '', n.venue].filter(Boolean);
       if (isUpcoming(n.date)) sub.push('Upcoming');
       main.appendChild(el('div', 'news-sub', sub.join(' · ')));
       if (n.note) main.appendChild(el('p', 'news-note', n.note));
@@ -694,7 +694,7 @@
       (DATA.news || []).forEach(function (n) {
         var art = el('article');
         art.appendChild(el('h3', null, n.title || ''));
-        var meta = [newsLabel(n.date), NEWS_KINDS[String(n.kind || 'other').toLowerCase()], n.venue].filter(Boolean).join(' · ');
+        var meta = [newsLabel(n.date), NEWS_KINDS[String(n.kind || '').toLowerCase()], n.venue].filter(Boolean).join(' · ');
         if (meta) art.appendChild(el('p', null, meta));
         if (n.note) art.appendChild(el('p', null, n.note));
         sec.appendChild(art);

@@ -501,7 +501,7 @@ window.SITE_DATA = {
     {
       "id": "dswu-global-challenger-scholarship",
       "date": "2026-06",
-      "kind": "other",
+      "kind": "scholarship",
       "title": "DSWU Global Challenger Scholarship for Overseas Research",
       "venue": "",
       "note": "Selected as a \"Duksung Global Challenger\" (Granted ₩10M for Overseas Research)",
@@ -512,7 +512,7 @@ window.SITE_DATA = {
     {
       "id": "recipient-of-the-bang-jeong-hwan-academic-excellence-scholarship",
       "date": "2026-07",
-      "kind": "other",
+      "kind": "scholarship",
       "title": "Recipient of the Bang Jeong-Hwan Academic Excellence Scholarship",
       "venue": "",
       "note": "",

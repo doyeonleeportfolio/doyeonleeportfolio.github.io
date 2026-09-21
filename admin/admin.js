@@ -952,17 +952,17 @@
 
   var NEWS_KINDS = [
     ['award', '수상 (Award)'],
+    ['scholarship', '장학 (Scholarship)'],
     ['conference', '학회 · 참가 (Conference)'],
     ['talk', '발표 · 강연 (Talk)'],
     ['exhibition', '전시 · 상영 (Exhibition)'],
     ['press', '기사 · 인터뷰 (Press)'],
-    ['residency', '레지던시 (Residency)'],
-    ['other', '그 외 활동 (Activity)']
+    ['residency', '레지던시 (Residency)']
   ];
 
   function newsKindLabel(k) {
     for (var i = 0; i < NEWS_KINDS.length; i++) if (NEWS_KINDS[i][0] === k) return NEWS_KINDS[i][1];
-    return NEWS_KINDS[NEWS_KINDS.length - 1][1];
+    return '';
   }
 
   /* 사이트와 같은 정렬 기준 — 'YYYY' · 'YYYY-MM' · 'YYYY-MM-DD' 를 모두 받는다 */
@@ -1039,7 +1039,7 @@
     main.appendChild(field('날짜', input(item.date, function (v) { item.date = v.trim(); }, '2026-12'),
       '연-월(2026-12)이 기본입니다. 날짜까지 적으려면 2026-12-10, 연도만 적으려면 2026. 최신순 정렬과 Upcoming 표시에 쓰입니다.'));
 
-    main.appendChild(field('종류', select(item.kind || 'other', NEWS_KINDS, function (v) { item.kind = v; }),
+    main.appendChild(field('종류', select(item.kind || 'award', NEWS_KINDS, function (v) { item.kind = v; }),
       '사이트에는 제목 아래 영문으로 표시됩니다 (Award · Conference …).'));
 
     main.appendChild(field('제목 (영문 권장)', input(item.title, function (v) { item.title = v; }, 'Student Volunteer, SIGGRAPH Asia 2026'),
@@ -1311,7 +1311,7 @@
     DATA.studiesGif = DATA.studiesGif || '';
     DATA.news = DATA.news || [];
     DATA.news.forEach(function (n) {
-      n.kind = n.kind || 'other';
+      n.kind = n.kind || 'award';
       n.date = n.date || '';
       n.venue = n.venue || '';
       n.note = n.note || '';
