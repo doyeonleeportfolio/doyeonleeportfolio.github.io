@@ -444,6 +444,7 @@
     conference: 'Conference',
     talk: 'Talk',
     exhibition: 'Exhibition',
+    project: 'Project',
     press: 'Press',
     residency: 'Residency',
     service: 'Service'
@@ -489,6 +490,7 @@
     ['conference', 'Conferences'],
     ['talk', 'Talks'],
     ['exhibition', 'Exhibitions'],
+    ['project', 'Projects'],
     ['press', 'Press'],
     ['residency', 'Residencies'],
     ['service', 'Service']

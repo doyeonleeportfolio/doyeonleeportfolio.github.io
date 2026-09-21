@@ -523,7 +523,7 @@ window.SITE_DATA = {
     {
       "id": "opcd-color-the-beat-mewmung",
       "date": "2026-01",
-      "kind": "residency",
+      "kind": "project",
       "title": "OPCD-Color the Beat | Projection Design for Artist MEWMUNG",
       "venue": "OPCD, Dobong-gu",
       "note": "Participated creating video content for OPCD stage.",
@@ -534,7 +534,7 @@ window.SITE_DATA = {
     {
       "id": "media-facade-project-jangmiwon-traditional-market",
       "date": "2025-11",
-      "kind": "residency",
+      "kind": "project",
       "title": "Media Facade Project | Jangmiwon Traditional Market",
       "venue": "",
       "note": "Participated directing and creating media facade video for traditional market in Jangmiwon market (located in Seoul)",
