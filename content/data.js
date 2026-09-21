@@ -544,10 +544,10 @@ window.SITE_DATA = {
     },
     {
       "id": "opcd-color-the-beat-mewmung",
-      "date": "2026-09",
+      "date": "2026-01",
       "kind": "residency",
       "title": "OPCD-Color the Beat | MEWMUNG - 돌 징검다리",
-      "venue": "",
+      "venue": "OPCD, Dobong-gu",
       "note": "",
       "href": "https://youtu.be/c4cFc5baHug?si=fxPj1qstkHAhrwbS",
       "image": "content/media/opcd-color-the-beat-mewmung/스크린샷-2026-09-21-224107.png",
