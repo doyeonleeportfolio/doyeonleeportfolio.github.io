@@ -445,7 +445,8 @@
     talk: 'Talk',
     exhibition: 'Exhibition',
     press: 'Press',
-    residency: 'Residency'
+    residency: 'Residency',
+    service: 'Service'
   };
 
   function pad2(v) {

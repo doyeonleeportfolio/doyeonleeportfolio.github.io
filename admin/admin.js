@@ -957,7 +957,8 @@
     ['talk', '발표 · 강연 (Talk)'],
     ['exhibition', '전시 · 상영 (Exhibition)'],
     ['press', '기사 · 인터뷰 (Press)'],
-    ['residency', '레지던시 (Residency)']
+    ['residency', '레지던시 (Residency)'],
+    ['service', '학내 · 대외 활동 (Service)']
   ];
 
   function newsKindLabel(k) {
