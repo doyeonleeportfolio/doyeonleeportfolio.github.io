@@ -75,7 +75,7 @@ window.SITE_DATA = {
         "data",
         "moving"
       ],
-      "descriptionKo": "조각보는 남은 천을 이어 만든 보자기입니다. 이 작품의 얇은 명주 조각들은 빛을 통과시키고, 겹친 자리만 조금 더 짙게 비칩니다. 왼쪽에서 오른쪽으로 바느질의 물결이 지나가면 조각마다 눌린 꽃잎과 진주와 비즈가 차례로 달렸다가 다시 풀립니다. 루프로 이어지는 영상에서 이 보자기는 어디서 보기 시작해도 끝나지 않습니다. 형태는 코드로 계산하고, 천의 질감은 생성형 AI로 채웠습니다.\n"
+      "descriptionKo": ""
     },
     {
       "id": "pompeii-heritage-xr-reseravtion-galaxy-xr",
@@ -85,7 +85,7 @@ window.SITE_DATA = {
       "media": [
         {
           "type": "video",
-          "src": "content/media/pompeii-heritage-xr-reseravtion-galaxy-xr/시연영상-수정.mp4",
+          "src": "content/media/pompeii-heritage-xr-reseravtion-galaxy-xr/demo-video.mp4",
           "caption": ""
         }
       ],
@@ -131,7 +131,7 @@ window.SITE_DATA = {
         "moving"
       ],
       "description": "A story of exploring an alien planet. Arriving on a world no one was supposed to have reached — and finding that someone already had.\n\nA real-time environment built in Unreal Engine and captured as a single-channel video: the planet's surface, its light and the traces left behind are the scenery of a first contact that turns out to be a second one.",
-      "descriptionKo": "외계 행성에서 탐험하는 이야기\n\"행성에 처음 도달했는데, 이미 사람이 있었던 흔적이 있다\"",
+      "descriptionKo": "",
       "links": [],
       "hover": {
         "length": 6,
@@ -180,92 +180,92 @@ window.SITE_DATA = {
         },
         {
           "type": "image",
-          "src": "content/media/apocalypse-env/20241192-이도연-페이지-19.png",
+          "src": "content/media/apocalypse-env/20241192-page-19.png",
           "caption": ""
         },
         {
           "type": "image",
-          "src": "content/media/apocalypse-env/20241192-이도연-페이지-20.png",
+          "src": "content/media/apocalypse-env/20241192-page-20.png",
           "caption": ""
         },
         {
           "type": "image",
-          "src": "content/media/apocalypse-env/20241192-이도연-페이지-21.png",
+          "src": "content/media/apocalypse-env/20241192-page-21.png",
           "caption": ""
         },
         {
           "type": "image",
-          "src": "content/media/apocalypse-env/20241192-이도연-페이지-22.png",
+          "src": "content/media/apocalypse-env/20241192-page-22.png",
           "caption": ""
         },
         {
           "type": "image",
-          "src": "content/media/apocalypse-env/20241192-이도연-페이지-23.png",
+          "src": "content/media/apocalypse-env/20241192-page-23.png",
           "caption": ""
         },
         {
           "type": "image",
-          "src": "content/media/apocalypse-env/20241192-이도연-페이지-24.png",
+          "src": "content/media/apocalypse-env/20241192-page-24.png",
           "caption": ""
         },
         {
           "type": "image",
-          "src": "content/media/apocalypse-env/20241192-이도연-페이지-25.png",
+          "src": "content/media/apocalypse-env/20241192-page-25.png",
           "caption": ""
         },
         {
           "type": "image",
-          "src": "content/media/apocalypse-env/20241192-이도연-페이지-26.png",
+          "src": "content/media/apocalypse-env/20241192-page-26.png",
           "caption": ""
         },
         {
           "type": "image",
-          "src": "content/media/apocalypse-env/20241192-이도연-페이지-27.png",
+          "src": "content/media/apocalypse-env/20241192-page-27.png",
           "caption": ""
         },
         {
           "type": "image",
-          "src": "content/media/apocalypse-env/20241192-이도연-페이지-28.png",
+          "src": "content/media/apocalypse-env/20241192-page-28.png",
           "caption": ""
         },
         {
           "type": "image",
-          "src": "content/media/apocalypse-env/20241192-이도연-페이지-29.png",
+          "src": "content/media/apocalypse-env/20241192-page-29.png",
           "caption": ""
         },
         {
           "type": "image",
-          "src": "content/media/apocalypse-env/20241192-이도연-페이지-30.png",
+          "src": "content/media/apocalypse-env/20241192-page-30.png",
           "caption": ""
         },
         {
           "type": "image",
-          "src": "content/media/apocalypse-env/20241192-이도연-페이지-31.png",
+          "src": "content/media/apocalypse-env/20241192-page-31.png",
           "caption": ""
         },
         {
           "type": "image",
-          "src": "content/media/apocalypse-env/20241192-이도연-페이지-32.png",
+          "src": "content/media/apocalypse-env/20241192-page-32.png",
           "caption": ""
         },
         {
           "type": "image",
-          "src": "content/media/apocalypse-env/20241192-이도연-페이지-33.png",
+          "src": "content/media/apocalypse-env/20241192-page-33.png",
           "caption": ""
         },
         {
           "type": "image",
-          "src": "content/media/apocalypse-env/20241192-이도연-페이지-34.png",
+          "src": "content/media/apocalypse-env/20241192-page-34.png",
           "caption": ""
         },
         {
           "type": "image",
-          "src": "content/media/apocalypse-env/20241192-이도연-페이지-35.png",
+          "src": "content/media/apocalypse-env/20241192-page-35.png",
           "caption": ""
         },
         {
           "type": "image",
-          "src": "content/media/apocalypse-env/20241192-이도연-페이지-36.png",
+          "src": "content/media/apocalypse-env/20241192-page-36.png",
           "caption": ""
         }
       ],
@@ -280,7 +280,7 @@ window.SITE_DATA = {
         "xr"
       ],
       "description": "Year 2340. A long time has passed since the fall of Earth.\n\nThe ruins of the city have already been reclaimed by dense forests and lush greenery, achieving a state of recovery driven by nature itself. Through the glass, the distant silhouette of crumbling buildings swallowed by the wild forest stands as a symbol of this era.\n\nHigh-tech devices requiring precision, like smartphones and robots, have rendered themselves useless due to prolonged power outages and the loss of manufacturing knowledge. Only the most durable and easily repairable machines remain by my side. All I have left to use are ancient box computers, Game Boys, radios, and cassette players.\n\nThis space is my one and only sanctuary, a refuge for enduring the loneliness of being left entirely alone.",
-      "descriptionKo": "2340년.\n지구가 멸망하고 오랜 시간이 흐른 후.\n도시의 잔해는 이미 울창한 숲과 풀로 뒤덮여 자연에 의한 회복을 이루었다.\n유리창 너머로 야생의 숲에 파묻힌 먼 도시의 부서진 건물 실루엣이 이 시대를 상징한다.\n\n정밀한 기술을 요하는 스마트폰이나 로봇 같은 기기들은 오랜 전력 부재와 제조 기술 소실로 무용지물이 되었다. 오직 내구성이 강하고 수리가 용이한 기기들 만이 나와 함께 남아있다.\n사용할 수 있는 것은 오래된 박스 컴퓨터, 게임보이, 라디오, 카세트와 같은 것들이 전부이다.\n\n이 공간은 홀로 남은 나의 유일한 안식처이자 고독을 견디기 위한 곳이다.",
+      "descriptionKo": "",
       "links": []
     },
     {
@@ -306,7 +306,7 @@ window.SITE_DATA = {
         "moving"
       ],
       "description": "This project expands the momentary sensations of drinking tea into the realms of sight and sound. Beyond being a simple beverage, tea is a synesthetic medium that encapsulates scent, taste, temperature, and even the landscape of its origin. This work seeks to elevate the experience of tea — traditionally confined to taste and smell — into a multifaceted visual and auditory dimension.\n\nThe core concept of the work lies in the 'Materiality' of the elements that constitute tea. Physical components such as tea leaves, powder, pulp, moisture, light, and temperature serve as the starting point of the exploration. By intertwining these with the environmental characteristics of the tea's origin, the work reinterprets the abstract emotions and impressions felt while drinking tea into a sensory visual language.\n\nThe narrative follows a sequence: 'The Space of Growth → The Raw Material → The Sensation of Consumption.' While based on the intuitively recognizable forms and textures of the raw ingredients, the work goes beyond mere representation. By integrating abstract movements of light and sound, it offers an expanded experience to the audience. This allows viewers to preview the character of the tea through their senses before drinking it or to have their sensations amplified while consuming it.",
-      "descriptionKo": "본 영상은 차를 마시는 찰나의 감각을 시각과 청각의 영역으로 확장하여 전달한다. 차는 단순한 음료의 정의를 넘어 향과 맛, 온도, 그리고 그것이 길러진 토양의 풍경까지 품고 있는 공감각적인 매개체다. 작품은 미각과 후각에 머물러 있던 차의 경험을 시각적, 청각적 차원으로 극대화하여 표현하고자 했다.\n\n작업의 핵심 키워드는 차를 구성하는 요소들의 물성(Materiality)이다. 찻잎, 분말, 과육, 수분, 빛, 그리고 온도와 같은 물리적 요소들을 탐구의 출발점으로 삼았다. 여기에 차가 재배된 원산지의 환경적 특성을 결합하여, 차를 마실 때 느껴지는 추상적인 감정과 인상을 감각적인 영상 언어로 재해석한다.\n\n작품의 내러티브는 차가 자라난 공간 → 차의 원물 → 차를 마시는 순간의 감각으로 이어지는 흐름을 따른다. 직관적으로 인지 가능한 원물의 형태와 질감을 토대로 하되, 이를 단순한 재현에 그치지 않고 추상적인 빛의 움직임과 사운드를 결합함으로써 관람자에게 보다 확장된 경험을 선사한다. 이를 통해 관람자는 차를 마시기 전 시청각을 통해 그 성격을 예습하거나, 차를 마시는 동시에 감각이 증폭되는 경험을 마주하게 된다.",
+      "descriptionKo": "",
       "links": []
     },
     {
@@ -414,11 +414,11 @@ window.SITE_DATA = {
         "Cinemetrics"
       ],
       "summary": "Tracks a darkness-weighted visual barycenter through every frame of 120 tokusatsu episodes. The two franchises diverge by temporal scale — Super Sentai redistributes weight faster across episodes, Kamen Rider ranges wider within action scenes. Manuscript in preparation.",
-      "cover": "content/media/screen-composition-in-motion/스크린샷-2026-09-02-234940.png",
+      "cover": "content/media/screen-composition-in-motion/screenshot-2026-09-02-234940.png",
       "media": [
         {
           "type": "image",
-          "src": "content/media/screen-composition-in-motion/스크린샷-2026-09-02-234940-2.png",
+          "src": "content/media/screen-composition-in-motion/screenshot-2026-09-02-234940-2.png",
           "caption": ""
         },
         {
@@ -449,11 +449,11 @@ window.SITE_DATA = {
         "Computational Craft"
       ],
       "summary": "Writes the compositional rules of Asante kente cloth as a testable formal grammar, built from a transcribed corpus and Ghanaian scholarship. A companion artwork weaves the meanings of Korean Hanja given names into new patterns — translation, never equivalence.",
-      "cover": "content/media/woven-names/스크린샷-2026-09-02-234744-2.png",
+      "cover": "content/media/woven-names/screenshot-2026-09-02-234744-2.png",
       "media": [
         {
           "type": "image",
-          "src": "content/media/woven-names/스크린샷-2026-09-02-234744.png",
+          "src": "content/media/woven-names/screenshot-2026-09-02-234744.png",
           "caption": "Render test scene"
         }
       ],

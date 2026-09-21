@@ -712,7 +712,7 @@
     if (isWork) {
       main.appendChild(field('국문 설명 (선택)',
         textarea(item.descriptionKo, 5, function (v) { item.descriptionKo = v; }),
-        '영문 아래에 옅은 선 하나 건너 표시됩니다. 영문만 쓰려면 비워 두세요.'));
+        '사이트는 영문으로만 유지하기로 해서 지금은 전부 비어 있습니다. 여기에 국문을 쓰면 영문 아래에 옅은 선 하나 건너 다시 표시됩니다.'));
     }
 
     /* 미디어 */
