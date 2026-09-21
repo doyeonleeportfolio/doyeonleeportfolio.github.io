@@ -465,7 +465,7 @@ window.SITE_DATA = {
   "news": [
     {
       "id": "2026-hcik",
-      "date": "2025-01",
+      "date": "2026-01",
       "kind": "award",
       "title": "HCI Korea 2026 Creative Award - Best Award",
       "venue": "",
