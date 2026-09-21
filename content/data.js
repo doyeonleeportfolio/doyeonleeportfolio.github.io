@@ -568,16 +568,14 @@ window.SITE_DATA = {
     },
     {
       "id": "unveiling-and-breathing-resonance-showcase",
-      "date": "2026-09",
-      "kind": "award",
+      "date": "2025-11",
+      "kind": "exhibition",
       "title": "Unveiling and Breathing Resonance Showcase",
       "venue": "Sehwa Museum of Art. Seoul",
       "note": "",
       "href": "https://uabr-website.vercel.app/",
       "image": "content/media/unveiling-and-breathing-resonance-showcase/kakaotalk-20260921-230046632.jpg",
-      "related": [
-        "time-of-materiality"
-      ]
+      "related": []
     }
   ],
   "studiesGif": "content/media/studies/giphy.gif"
