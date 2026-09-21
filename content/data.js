@@ -466,7 +466,7 @@ window.SITE_DATA = {
     {
       "id": "2026-hcik",
       "date": "2026-01",
-      "kind": "award",
+      "kind": "conference",
       "title": "HCI Korea 2026 Creative Award - Best Award",
       "venue": "",
       "note": "",
@@ -510,28 +510,6 @@ window.SITE_DATA = {
       "related": []
     },
     {
-      "id": "recipient-of-the-bang-jeong-hwan-academic-excellence-scholarship",
-      "date": "2026-07",
-      "kind": "scholarship",
-      "title": "Recipient of the Bang Jeong-Hwan Academic Excellence Scholarship",
-      "venue": "",
-      "note": "",
-      "href": "",
-      "image": "",
-      "related": []
-    },
-    {
-      "id": "recipient-of-the-bang-jeong-hwan-academic-excellence-scholarship-2",
-      "date": "2024-11",
-      "kind": "scholarship",
-      "title": "(Freshman)Recipient of the Bang Jeong-Hwan Academic Excellence Scholarship",
-      "venue": "",
-      "note": "",
-      "href": "",
-      "image": "",
-      "related": []
-    },
-    {
       "id": "vice-president-college-of-future-talents-dswu",
       "date": "2025",
       "kind": "service",
@@ -570,11 +548,22 @@ window.SITE_DATA = {
       "id": "unveiling-and-breathing-resonance-showcase",
       "date": "2025-11",
       "kind": "exhibition",
-      "title": "Unveiling and Breathing Resonance Showcase",
+      "title": "Unveiling and Breathing Resonance Showcase ",
       "venue": "Sehwa Museum of Art. Seoul",
       "note": "",
       "href": "https://uabr-website.vercel.app/",
       "image": "content/media/unveiling-and-breathing-resonance-showcase/kakaotalk-20260921-230046632.jpg",
+      "related": []
+    },
+    {
+      "id": "academic-conference-hosted-by-the-college-of-future-talents-dswu",
+      "date": "2025-10",
+      "kind": "award",
+      "title": "Outstanding Paper Award | College Academic Conference",
+      "venue": "",
+      "note": "Outstanding Paper Award | Academic Conference hosted by the College of Future Talents(DSWU)",
+      "href": "",
+      "image": "",
       "related": []
     }
   ],
