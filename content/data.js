@@ -484,6 +484,17 @@ window.SITE_DATA = {
       "href": "https://asia.siggraph.org/2026/",
       "image": "",
       "related": []
+    },
+    {
+      "id": "contest-to-revitalize-traditional-markets-grand-prize",
+      "date": "2026-01",
+      "kind": "award",
+      "title": "=Contest to Revitalize Traditional Markets - Grand Prize",
+      "venue": "Duksung Women's University",
+      "note": "",
+      "href": "https://www.joongang.co.kr/article/25402359",
+      "image": "",
+      "related": []
     }
   ],
   "studiesGif": "content/media/studies/giphy.gif"
