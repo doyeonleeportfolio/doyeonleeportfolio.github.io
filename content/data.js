@@ -433,7 +433,7 @@ window.SITE_DATA = {
     },
     {
       "id": "woven-names",
-      "title": "Woven Names: Formalizing Kente Visual Grammar for Cross-Cultural Generative Art",
+      "title": "Formalizing Kente Visual Grammar for Cross-Cultural Generative Art",
       "year": "2026–",
       "status": "ongoing",
       "themes": [
@@ -449,15 +449,9 @@ window.SITE_DATA = {
         "Computational Craft"
       ],
       "summary": "Writes the compositional rules of Asante kente cloth as a testable formal grammar, built from a transcribed corpus and Ghanaian scholarship. A companion artwork weaves the meanings of Korean Hanja given names into new patterns — translation, never equivalence.",
-      "cover": "content/media/woven-names/screenshot-2026-09-02-234744-2.png",
-      "media": [
-        {
-          "type": "image",
-          "src": "content/media/woven-names/screenshot-2026-09-02-234744.png",
-          "caption": "Render test scene"
-        }
-      ],
-      "description": "This study transcribes a pilot corpus of vintage Asante-attributed kente cloths into discrete symbol sequences, then writes a stochastic parametric grammar of their composition, grounded in published Ghanaian scholarship — calibrated on training cloths, evaluated against a sealed hold-out set. Early observations, such as strip-assembly phase patterns and the divergence between how often and how large Akan colour categories appear, are reported as corpus-relative and exploratory.\n\nA companion media-art system carries the grammar forward: a visitor traces their Hanja given name, confirms its meaning, and receives a pattern card woven by the grammar — a graded matching that presents itself as translation, never as equivalence. All cultural-meaning claims stay within cited Ghanaian sources. Unpublished, in progress.",
+      "cover": "",
+      "media": [],
+      "description": "",
       "relatedWorks": [],
       "links": []
     }
