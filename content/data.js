@@ -462,6 +462,16 @@ window.SITE_DATA = {
       "links": []
     }
   ],
-  "news": [],
+  "news": [
+    {
+      "id": "2026-hcik",
+      "date": "2025-01",
+      "kind": "award",
+      "title": "HCI Korea 2026 Creative Award - Best Award",
+      "venue": "",
+      "note": "",
+      "href": ""
+    }
+  ],
   "studiesGif": "content/media/studies/giphy.gif"
 };
