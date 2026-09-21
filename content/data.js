@@ -466,7 +466,7 @@ window.SITE_DATA = {
     {
       "id": "2026-hcik",
       "date": "2026-01",
-      "kind": "conference",
+      "kind": "award",
       "title": "HCI Korea 2026 Creative Award - Best Award",
       "venue": "",
       "note": "",
@@ -562,6 +562,17 @@ window.SITE_DATA = {
       "title": "Outstanding Paper Award | College Academic Conference",
       "venue": "",
       "note": "Outstanding Paper Award | Academic Conference hosted by the College of Future Talents(DSWU)",
+      "href": "",
+      "image": "",
+      "related": []
+    },
+    {
+      "id": "attended-exhibited-in-hci-korea-2026",
+      "date": "2026-09",
+      "kind": "conference",
+      "title": "Attended & Exhibited in HCI Korea 2026",
+      "venue": "HCIK",
+      "note": "",
       "href": "",
       "image": "",
       "related": []
