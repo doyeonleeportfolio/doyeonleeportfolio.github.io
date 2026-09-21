@@ -466,13 +466,15 @@ window.SITE_DATA = {
     {
       "id": "2026-hcik",
       "date": "2026-01",
-      "kind": "award",
+      "kind": "conference",
       "title": "HCI Korea 2026 Creative Award - Best Award",
       "venue": "",
       "note": "",
       "href": "",
       "image": "",
-      "related": []
+      "related": [
+        "time-of-materiality"
+      ]
     },
     {
       "id": "siggraph-asia-2026-sv",
