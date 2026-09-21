@@ -489,10 +489,32 @@ window.SITE_DATA = {
       "id": "contest-to-revitalize-traditional-markets-grand-prize",
       "date": "2026-01",
       "kind": "award",
-      "title": "=Contest to Revitalize Traditional Markets - Grand Prize",
+      "title": "Contest to Revitalize Traditional Markets - Grand Prize",
       "venue": "Duksung Women's University",
       "note": "",
       "href": "https://www.joongang.co.kr/article/25402359",
+      "image": "",
+      "related": []
+    },
+    {
+      "id": "dswu-global-challenger-scholarship",
+      "date": "2026-06",
+      "kind": "other",
+      "title": "DSWU Global Challenger Scholarship for Overseas Research",
+      "venue": "",
+      "note": "Selected as a \"Duksung Global Challenger\" (Granted ₩10M for Overseas Research)",
+      "href": "",
+      "image": "",
+      "related": []
+    },
+    {
+      "id": "recipient-of-the-bang-jeong-hwan-academic-excellence-scholarship",
+      "date": "2026-07",
+      "kind": "other",
+      "title": "Recipient of the Bang Jeong-Hwan Academic Excellence Scholarship",
+      "venue": "",
+      "note": "",
+      "href": "",
       "image": "",
       "related": []
     }
