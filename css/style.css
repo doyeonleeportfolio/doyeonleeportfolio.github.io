@@ -145,12 +145,14 @@ img, video { display: block; }
 
 /* 뷰 진입 — 내용이 바닥에서 조용히 떠오른다 (works는 자체 리듬이 있어 제외) */
 .view-studies > *,
+.view-news > *,
 .view-about > *,
 .view-contact > * {
   animation: view-in 0.6s var(--ease) backwards;
 }
 /* 이름표가 먼저, 내용은 반 박자 뒤에 */
 .view-studies > * + *,
+.view-news > * + *,
 .view-about > * + *,
 .view-contact > * + * {
   animation-delay: 90ms;
@@ -169,6 +171,7 @@ img, video { display: block; }
 
 /* 네이브 기둥선 — 콘텐츠 페이지의 수직 축. 헤더의 수평선과 십자 구도를 이룬다 */
 .view-studies::before,
+.view-news::before,
 .view-about::before,
 .view-contact::before {
   content: '';
@@ -491,6 +494,70 @@ body.on-home .site-header { background: transparent; }
   font-size: 18px;
   font-weight: 450;
   letter-spacing: 0.01em;
+}
+
+/* ---------- news — 수상 · 학회 · 소식. Research 행과 같은 문법 ---------- */
+
+.view-news {
+  overflow-y: auto;
+  padding: 40px var(--pad-x) 80px calc(var(--nav-w) + var(--pad-x));
+}
+
+.news-list { max-width: 760px; }
+
+.news-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 28px;
+  padding: 20px 0;
+  border-bottom: var(--hairline);
+  transition: transform 0.4s var(--ease);
+}
+.news-row:first-child { border-top: var(--hairline); }
+
+/* 링크가 있는 줄만 반 걸음 다가온다 */
+a.news-row { cursor: pointer; }
+a.news-row:hover,
+a.news-row:focus-visible { transform: translateX(12px); }
+a.news-row:hover .news-date,
+a.news-row:focus-visible .news-date { opacity: 1; }
+
+.news-date {
+  flex: none;
+  width: 112px;   /* Research 의 연도 열과 같은 척도 */
+  font-size: 12px;
+  letter-spacing: var(--ls-data);
+  opacity: var(--muted);
+  transition: opacity 0.3s var(--ease);
+}
+
+.news-main { flex: 1; min-width: 0; }
+
+.news-title {
+  font-size: 18px;
+  font-weight: 450;
+  letter-spacing: 0.01em;
+}
+
+.news-sub {
+  margin-top: 10px;
+  font-size: 12px;
+  letter-spacing: var(--ls-data);
+  opacity: var(--muted);
+}
+
+.news-note {
+  margin-top: 10px;
+  font-size: 15px;
+  line-height: 1.7;
+  max-width: 480px;
+}
+
+.news-out {
+  flex: none;
+  margin-left: auto;
+  font-size: 12px;
+  opacity: var(--muted);
 }
 
 /* ---------- about / contact ---------- */
@@ -824,6 +891,7 @@ body.on-home .site-header { background: transparent; }
   .strip-item { animation-duration: 0.01s; animation-delay: 0s; }
   .detail-overlay { transition: none; }
   .view-studies > *,
+  .view-news > *,
   .view-about > *,
   .view-contact > * { animation: none; }
   .view.leaving { animation: none; }
@@ -879,6 +947,7 @@ body.on-home .site-header { background: transparent; }
   .strip-item:nth-child(4n) { margin-top: 0; margin-bottom: 0; }
 
   .view-studies,
+  .view-news,
   .view-about,
   .view-contact {
     padding: 28px var(--pad-x) 80px;
@@ -886,6 +955,7 @@ body.on-home .site-header { background: transparent; }
 
   /* 모바일 — 메뉴가 가로로 눕고 기둥선의 자리가 사라진다 */
   .view-studies::before,
+  .view-news::before,
   .view-about::before,
   .view-contact::before { display: none; }
 
@@ -896,6 +966,7 @@ body.on-home .site-header { background: transparent; }
   .home-sat { font-size: 13px; }
   .study-thumb { display: none; }
   .study-year { width: 72px; }
+  .news-date { width: 72px; }
   .meta-label { width: 84px; }
   .cv-year { width: 72px; }
 

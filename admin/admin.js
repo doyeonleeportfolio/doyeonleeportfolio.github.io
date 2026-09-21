@@ -128,7 +128,7 @@
   function uniqueId(title) {
     var base = slugBase(title) || 'item';
     /* 'about' / 'studies' 는 공용 미디어 폴더 — 항목 id 로 쓰이면 삭제 시 그 폴더가 날아간다 */
-    var all = ['about', 'studies'].concat(DATA.works.concat(DATA.studies).map(function (x) { return x.id; }));
+    var all = ['about', 'studies'].concat(DATA.works.concat(DATA.studies, DATA.news || []).map(function (x) { return x.id; }));
     var id = base, n = 2;
     while (all.indexOf(id) >= 0) { id = base + '-' + n; n++; }
     return id;
@@ -379,9 +379,14 @@
     });
     if (deployTimer) { clearInterval(deployTimer); deployTimer = null; }
     main.textContent = '';
-    if (editing) { renderEditor(); return; }
+    if (editing) {
+      if (editing.list === 'news') renderNewsEditor();
+      else renderEditor();
+      return;
+    }
     if (view === 'basic') renderBasic();
     else if (view === 'works') renderList('works');
+    else if (view === 'news') renderNews();
     else if (view === 'deploy') renderDeploy();
     else renderList('studies');
   }
@@ -942,6 +947,110 @@
       '첫 번째 영상의 이 구간이 첫 화면에서 마우스를 올렸을 때 소리 없이 재생됩니다. 터치 기기에서는 화면 가운데 온 작품이 같은 설정으로 재생됩니다.'));
   }
 
+  /* ----- News — 수상 · 학회 · 소식 ----- */
+
+  var NEWS_KINDS = [
+    ['award', '수상 (Award)'],
+    ['conference', '학회 · 참가 (Conference)'],
+    ['talk', '발표 · 강연 (Talk)'],
+    ['exhibition', '전시 · 상영 (Exhibition)'],
+    ['press', '기사 · 인터뷰 (Press)'],
+    ['residency', '레지던시 (Residency)'],
+    ['other', '그 외 활동 (Activity)']
+  ];
+
+  function newsKindLabel(k) {
+    for (var i = 0; i < NEWS_KINDS.length; i++) if (NEWS_KINDS[i][0] === k) return NEWS_KINDS[i][1];
+    return NEWS_KINDS[NEWS_KINDS.length - 1][1];
+  }
+
+  /* 사이트와 같은 정렬 기준 — 'YYYY' · 'YYYY-MM' · 'YYYY-MM-DD' 를 모두 받는다 */
+  function newsSortKey(d) {
+    var p = String(d || '').trim().split(/[-.\/]/);
+    function pad(v) { var n = String(v || '').replace(/\D/g, ''); return n ? ('0' + n).slice(-2) : '00'; }
+    return (String(p[0] || '0000').replace(/\D/g, '') || '0000') + '-' + pad(p[1]) + '-' + pad(p[2]);
+  }
+
+  function renderNews() {
+    main.appendChild(el('h2', 'section-title', 'News'));
+    main.appendChild(el('p', 'field-hint',
+      '수상, 학회 참가, 발표, 전시, 기사처럼 날짜가 있는 소식입니다. 사이트에서는 최신순으로 정렬되고, 아직 오지 않은 날짜는 Upcoming 으로 표시됩니다. 하나도 없으면 사이트 메뉴에 News 가 나타나지 않습니다.'));
+
+    var arr = DATA.news;
+    var list = el('div', 'item-list');
+    arr.slice().sort(function (a, b) {
+      var ka = newsSortKey(a.date), kb = newsSortKey(b.date);
+      return ka < kb ? 1 : ka > kb ? -1 : 0;
+    }).forEach(function (item) {
+      var row = el('div', 'item-row');
+      row.appendChild(el('span', 'item-year', item.date || '날짜 없음'));
+      row.appendChild(el('span', 'item-name', item.title || '(제목 없음)'));
+      row.appendChild(el('span', 'item-year', newsKindLabel(item.kind).replace(/\s*\(.*\)$/, '')));
+
+      var edit = el('button', 'mini-btn', '수정');
+      edit.addEventListener('click', function () { editing = { list: 'news', id: item.id }; render(); });
+      var del = el('button', 'mini-btn danger', '삭제');
+      del.addEventListener('click', function () {
+        if (!confirm('「' + (item.title || '제목 없음') + '」 소식을 삭제할까요?')) return;
+        arr.splice(arr.indexOf(item), 1);
+        setDirty(); render();
+      });
+      row.appendChild(edit); row.appendChild(del);
+      list.appendChild(row);
+    });
+    if (!arr.length) list.appendChild(el('p', 'field-hint', '아직 등록된 소식이 없습니다.'));
+    main.appendChild(list);
+
+    var add = el('button', 'add-btn', '+ 새 소식 추가');
+    add.addEventListener('click', function () {
+      var title = prompt('제목을 입력하세요 (영문 권장 · 나중에 수정 가능)\n예: Student Volunteer, SIGGRAPH Asia 2026', '');
+      if (title === null) return;
+      title = title.trim() || 'New Entry';
+      var now = new Date();
+      var item = {
+        id: uniqueId(title),
+        date: now.getFullYear() + '-' + ('0' + (now.getMonth() + 1)).slice(-2),
+        kind: 'award',
+        title: title,
+        venue: '',
+        note: '',
+        href: ''
+      };
+      arr.push(item);
+      editing = { list: 'news', id: item.id };
+      setDirty(); render();
+    });
+    main.appendChild(add);
+  }
+
+  function renderNewsEditor() {
+    var item = findEditing();
+    if (!item) { editing = null; render(); return; }
+
+    var back = el('button', 'editor-back', '← 목록으로 돌아가기');
+    back.addEventListener('click', function () { editing = null; render(); });
+    main.appendChild(back);
+    main.appendChild(el('h2', 'section-title', 'News 편집'));
+
+    main.appendChild(field('날짜', input(item.date, function (v) { item.date = v.trim(); }, '2026-12'),
+      '연-월(2026-12)이 기본입니다. 날짜까지 적으려면 2026-12-10, 연도만 적으려면 2026. 최신순 정렬과 Upcoming 표시에 쓰입니다.'));
+
+    main.appendChild(field('종류', select(item.kind || 'other', NEWS_KINDS, function (v) { item.kind = v; }),
+      '사이트에는 제목 아래 영문으로 표시됩니다 (Award · Conference …).'));
+
+    main.appendChild(field('제목 (영문 권장)', input(item.title, function (v) { item.title = v; }, 'Student Volunteer, SIGGRAPH Asia 2026'),
+      '무엇을 했는지 한 줄로. 수상이면 상 이름, 학회면 맡은 역할과 학회 이름.'));
+
+    main.appendChild(field('주최 · 장소 (선택)', input(item.venue, function (v) { item.venue = v; }, 'ACM SIGGRAPH, Tokyo'),
+      '주최 기관과 도시. 종류 옆에 한 줄로 붙습니다.'));
+
+    main.appendChild(field('한 줄 설명 (선택)', input(item.note, function (v) { item.note = v; }, 'Selected as a student volunteer for the conference.'),
+      '필요할 때만 씁니다. 비워 두면 줄이 나오지 않습니다.'));
+
+    main.appendChild(field('링크 (선택)', input(item.href, function (v) { item.href = v.trim(); }, 'https://…'),
+      '학회·공고·기사 주소. 넣으면 그 줄 전체가 링크가 되고 오른쪽에 ↗ 가 붙습니다.'));
+  }
+
   /* ----- 배포 (내 컴퓨터에서 연 관리도구 전용 — 웹에서는 저장이 곧 반영) ----- */
 
   function renderDeploy() {
@@ -1159,6 +1268,14 @@
     DATA.studies = DATA.studies || [];
     DATA.studies.forEach(function (s) { if (s.status === 'past') s.status = 'completed'; });   // 구 표기 정규화
     DATA.studiesGif = DATA.studiesGif || '';
+    DATA.news = DATA.news || [];
+    DATA.news.forEach(function (n) {
+      n.kind = n.kind || 'other';
+      n.date = n.date || '';
+      n.venue = n.venue || '';
+      n.note = n.note || '';
+      n.href = n.href || '';
+    });
     DATA.siteTagline = DATA.siteTagline || '';
     DATA.contact = DATA.contact || [];
     DATA.about = DATA.about || { text: '', image: '' };

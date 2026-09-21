@@ -462,5 +462,6 @@ window.SITE_DATA = {
       "links": []
     }
   ],
+  "news": [],
   "studiesGif": "content/media/studies/giphy.gif"
 };

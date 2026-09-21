@@ -6,7 +6,7 @@
   'use strict';
 
   var DATA = window.SITE_DATA || { siteName: 'PORTFOLIO', works: [], studies: [], about: {}, contact: [] };
-  var SECTIONS = ['home', 'works', 'about', 'contact', 'studies'];
+  var SECTIONS = ['home', 'works', 'about', 'contact', 'studies', 'news'];
 
   /* 홈 문양의 주제 키 ↔ 표시 이름 (home.js MOTIFS 와 같은 어휘) */
   var THEME_LABELS = {
@@ -23,6 +23,7 @@
     home: document.getElementById('view-home'),
     works: document.getElementById('view-works'),
     studies: document.getElementById('view-studies'),
+    news: document.getElementById('view-news'),
     about: document.getElementById('view-about'),
     contact: document.getElementById('view-contact')
   };
@@ -435,6 +436,76 @@
     }
   }
 
+  /* ---------- news — 수상 · 학회 · 소식 (날짜순 활동 기록) ---------- */
+
+  var NEWS_KINDS = {
+    award: 'Award',
+    conference: 'Conference',
+    talk: 'Talk',
+    exhibition: 'Exhibition',
+    press: 'Press',
+    residency: 'Residency',
+    other: 'Activity'
+  };
+
+  function pad2(v) {
+    var n = String(v || '').replace(/\D/g, '');
+    return n ? ('0' + n).slice(-2) : '00';
+  }
+
+  /* 'YYYY' · 'YYYY-MM' · 'YYYY-MM-DD' 아무거나 받아 정렬용 키로 */
+  function newsKey(d) {
+    var p = String(d || '').trim().split(/[-.\/]/);
+    return (String(p[0] || '0000').replace(/\D/g, '') || '0000') + '-' + pad2(p[1]) + '-' + pad2(p[2]);
+  }
+
+  function newsLabel(d) {
+    return String(d || '').trim().split(/[-.\/]/).filter(Boolean).join('.');
+  }
+
+  /* 아직 오지 않은 일정 — 월까지만 적힌 것은 그 달이 지나야 지난 일이 된다 */
+  function isUpcoming(d) {
+    var k = newsKey(d);
+    if (k.slice(0, 4) === '0000') return false;
+    var n = new Date();
+    var today = n.getFullYear() + '-' + pad2(n.getMonth() + 1) + '-' + pad2(n.getDate());
+    return k.slice(8) === '00' ? k.slice(0, 7) > today.slice(0, 7) : k > today;
+  }
+
+  function buildNews() {
+    var items = (DATA.news || []).slice();
+    var link = navLinks.filter(function (a) { return a.getAttribute('data-view') === 'news'; })[0];
+    /* 소식이 하나도 없으면 메뉴에서 감춘다 — 빈 방은 보여 주지 않는다 */
+    if (link) link.style.display = items.length ? '' : 'none';
+    if (!items.length) return;
+
+    var v = stage.news;
+    v.textContent = '';
+    v.appendChild(el('p', 'view-label', 'News'));
+    items.sort(function (a, b) {
+      var ka = newsKey(a.date), kb = newsKey(b.date);
+      return ka < kb ? 1 : ka > kb ? -1 : 0;   // 최신이 위
+    });
+    var list = el('div', 'news-list');
+    items.forEach(function (n) {
+      var row = el(n.href ? 'a' : 'div', 'news-row');
+      if (n.href) { row.href = n.href; row.target = '_blank'; row.rel = 'noopener'; }
+      row.appendChild(el('span', 'news-date', newsLabel(n.date)));
+
+      var main = el('div', 'news-main');
+      main.appendChild(el('div', 'news-title', n.title || ''));
+      var sub = [NEWS_KINDS[String(n.kind || 'other').toLowerCase()] || NEWS_KINDS.other, n.venue].filter(Boolean);
+      if (isUpcoming(n.date)) sub.push('Upcoming');
+      main.appendChild(el('div', 'news-sub', sub.join(' · ')));
+      if (n.note) main.appendChild(el('p', 'news-note', n.note));
+      row.appendChild(main);
+
+      if (n.href) row.appendChild(el('span', 'news-out', '\u2197'));
+      list.appendChild(row);
+    });
+    v.appendChild(list);
+  }
+
   /* ---------- about / contact ---------- */
 
   function paragraphs(text) {
@@ -570,6 +641,17 @@
         sec.appendChild(art);
       });
     });
+    if ((DATA.news || []).length) {
+      sec.appendChild(el('h2', null, 'News'));
+      (DATA.news || []).forEach(function (n) {
+        var art = el('article');
+        art.appendChild(el('h3', null, n.title || ''));
+        var meta = [newsLabel(n.date), NEWS_KINDS[String(n.kind || 'other').toLowerCase()], n.venue].filter(Boolean).join(' · ');
+        if (meta) art.appendChild(el('p', null, meta));
+        if (n.note) art.appendChild(el('p', null, n.note));
+        sec.appendChild(art);
+      });
+    }
     (DATA.contact || []).forEach(function (c) {
       sec.appendChild(el('p', null, (c.label ? c.label + ': ' : '') + (c.value || '')));
     });
@@ -905,6 +987,7 @@
 
   buildStrip();
   buildStudies();
+  buildNews();
   buildAbout();
   buildContact();
   buildIndex();
