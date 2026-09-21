@@ -472,6 +472,15 @@
     return k.slice(8) === '00' ? k.slice(0, 7) > today.slice(0, 7) : k > today;
   }
 
+  /* 관련 항목 — id 는 works·studies 를 통틀어 유일하다 (관리도구 uniqueId) */
+  function findAny(id) {
+    var w = (DATA.works || []).filter(function (x) { return x.id === id; })[0];
+    if (w) return { kind: 'w', item: w };
+    var s = (DATA.studies || []).filter(function (x) { return x.id === id; })[0];
+    if (s) return { kind: 's', item: s };
+    return null;
+  }
+
   function buildNews() {
     var items = (DATA.news || []).slice();
     var link = navLinks.filter(function (a) { return a.getAttribute('data-view') === 'news'; })[0];
@@ -488,19 +497,58 @@
     });
     var list = el('div', 'news-list');
     items.forEach(function (n) {
-      var row = el(n.href ? 'a' : 'div', 'news-row');
-      if (n.href) { row.href = n.href; row.target = '_blank'; row.rel = 'noopener'; }
+      /* 줄 전체를 링크로 만들지 않는다 — 안에 관련 작품 링크가 들어가기 때문 */
+      var row = el('div', 'news-row');
       row.appendChild(el('span', 'news-date', newsLabel(n.date)));
 
       var main = el('div', 'news-main');
-      main.appendChild(el('div', 'news-title', n.title || ''));
+      if (n.href) {
+        var out = el('a', 'news-title-link');
+        out.href = n.href;
+        out.target = '_blank';
+        out.rel = 'noopener';
+        out.appendChild(el('span', 'news-title', n.title || ''));
+        out.appendChild(el('span', 'news-out', '\u2197'));
+        main.appendChild(out);
+      } else {
+        main.appendChild(el('div', 'news-title', n.title || ''));
+      }
       var sub = [NEWS_KINDS[String(n.kind || 'other').toLowerCase()] || NEWS_KINDS.other, n.venue].filter(Boolean);
       if (isUpcoming(n.date)) sub.push('Upcoming');
       main.appendChild(el('div', 'news-sub', sub.join(' · ')));
       if (n.note) main.appendChild(el('p', 'news-note', n.note));
+
+      /* 이 소식과 묶인 작품·연구 — 눌러서 그 상세로 건너간다 */
+      var rel = listOf(n.related).map(findAny).filter(Boolean);
+      if (rel.length) {
+        var relWrap = el('div', 'news-related');
+        rel.forEach(function (r) {
+          var link = el('a', 'news-rel');
+          link.href = '#' + r.kind + '/' + encodeURIComponent(r.item.id);
+          var cov = r.item.cover || firstImage(r.item);
+          if (cov) {
+            var rt = el('img', 'news-rel-thumb');
+            rt.src = cov;
+            rt.alt = '';
+            rt.loading = 'lazy';
+            rt.draggable = false;
+            link.appendChild(rt);
+          }
+          link.appendChild(el('span', 'news-rel-title', r.item.title || ''));
+          relWrap.appendChild(link);
+        });
+        main.appendChild(relWrap);
+      }
       row.appendChild(main);
 
-      if (n.href) row.appendChild(el('span', 'news-out', '\u2197'));
+      if (n.image) {
+        var im = el('img', 'news-thumb');
+        im.src = n.image;
+        im.alt = '';
+        im.loading = 'lazy';
+        im.draggable = false;
+        row.appendChild(im);
+      }
       list.appendChild(row);
     });
     v.appendChild(list);

@@ -470,7 +470,20 @@ window.SITE_DATA = {
       "title": "HCI Korea 2026 Creative Award - Best Award",
       "venue": "",
       "note": "",
-      "href": ""
+      "href": "",
+      "image": "",
+      "related": []
+    },
+    {
+      "id": "siggraph-asia-2026-sv",
+      "date": "2026-12",
+      "kind": "conference",
+      "title": "Student Volunteer, SIGGRAPH Asia 2026",
+      "venue": "ACM SIGGRAPH Asia, Kuala Lumpur",
+      "note": "",
+      "href": "https://asia.siggraph.org/2026/",
+      "image": "",
+      "related": []
     }
   ],
   "studiesGif": "content/media/studies/giphy.gif"

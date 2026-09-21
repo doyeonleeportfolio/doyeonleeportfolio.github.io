@@ -515,12 +515,15 @@ body.on-home .site-header { background: transparent; }
 }
 .news-row:first-child { border-top: var(--hairline); }
 
-/* 링크가 있는 줄만 반 걸음 다가온다 */
-a.news-row { cursor: pointer; }
-a.news-row:hover,
-a.news-row:focus-visible { transform: translateX(12px); }
-a.news-row:hover .news-date,
-a.news-row:focus-visible .news-date { opacity: 1; }
+/* 제목이 곧 바깥 링크 — 줄 전체를 링크로 만들면 관련 작품 링크를 품을 수 없다 */
+.news-title-link {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  transition: opacity 0.3s var(--ease);
+}
+.news-title-link:hover,
+.news-title-link:focus-visible { opacity: var(--muted); }
 
 .news-date {
   flex: none;
@@ -558,6 +561,42 @@ a.news-row:focus-visible .news-date { opacity: 1; }
   margin-left: auto;
   font-size: 12px;
   opacity: var(--muted);
+}
+
+/* 이 소식과 묶인 작품·연구 — 그 상세로 건너가는 작은 미리보기 */
+.news-related {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  margin-top: 16px;
+}
+.news-rel {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  opacity: var(--muted);
+  transition: opacity 0.3s var(--ease), transform 0.4s var(--ease);
+}
+.news-rel:hover,
+.news-rel:focus-visible { opacity: 1; transform: translateX(4px); }
+.news-rel-thumb {
+  flex: none;
+  width: 96px;
+  height: 54px;
+  object-fit: cover;
+}
+.news-rel-title {
+  font-size: 12px;
+  letter-spacing: var(--ls-data);
+}
+
+/* 소식 사진 — Research 썸네일과 같은 척도 */
+.news-thumb {
+  flex: none;
+  width: 112px;
+  height: 63px;
+  object-fit: cover;
+  margin-left: auto;
 }
 
 /* ---------- about / contact ---------- */
@@ -967,6 +1006,16 @@ a.news-row:focus-visible .news-date { opacity: 1; }
   .study-thumb { display: none; }
   .study-year { width: 72px; }
   .news-date { width: 72px; }
+  /* 모바일 — 사진은 줄 아래로 내려가 제 크기를 찾는다 (숨기지 않는다) */
+  .news-row { flex-wrap: wrap; }
+  .news-thumb {
+    flex-basis: 100%;
+    width: 100%;
+    max-width: 240px;
+    height: auto;
+    margin: 16px 0 0;
+  }
+  .news-rel-thumb { width: 80px; height: 45px; }
   .meta-label { width: 84px; }
   .cv-year { width: 72px; }
 

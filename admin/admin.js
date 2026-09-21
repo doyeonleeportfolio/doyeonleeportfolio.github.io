@@ -153,6 +153,7 @@
     });
     if (DATA.about && DATA.about.image) used[DATA.about.image] = true;
     if (DATA.about && DATA.about.cvPdf) used[DATA.about.cvPdf] = true;
+    (DATA.news || []).forEach(function (n) { if (n.image) used[n.image] = true; });
     if (DATA.studiesGif) used[DATA.studiesGif] = true;
     return used;
   }
@@ -991,8 +992,9 @@
       edit.addEventListener('click', function () { editing = { list: 'news', id: item.id }; render(); });
       var del = el('button', 'mini-btn danger', '삭제');
       del.addEventListener('click', function () {
-        if (!confirm('「' + (item.title || '제목 없음') + '」 소식을 삭제할까요?')) return;
+        if (!confirm('「' + (item.title || '제목 없음') + '」 소식을 삭제할까요?\n올린 사진도 함께 삭제됩니다.')) return;
         arr.splice(arr.indexOf(item), 1);
+        apiDelete('content/media/' + item.id);
         setDirty(); render();
       });
       row.appendChild(edit); row.appendChild(del);
@@ -1014,7 +1016,9 @@
         title: title,
         venue: '',
         note: '',
-        href: ''
+        href: '',
+        image: '',
+        related: []
       };
       arr.push(item);
       editing = { list: 'news', id: item.id };
@@ -1048,7 +1052,44 @@
       '필요할 때만 씁니다. 비워 두면 줄이 나오지 않습니다.'));
 
     main.appendChild(field('링크 (선택)', input(item.href, function (v) { item.href = v.trim(); }, 'https://…'),
-      '학회·공고·기사 주소. 넣으면 그 줄 전체가 링크가 되고 오른쪽에 ↗ 가 붙습니다.'));
+      '학회·공고·기사 주소. 넣으면 제목이 링크가 되고 옆에 ↗ 가 붙습니다.'));
+
+    /* 사진 한 장 — 상장, 현장 사진, 기사 캡처 */
+    var iwrap = el('div');
+    if (item.image) {
+      var img = el('img', 'cover-preview');
+      img.src = mediaUrl(item.image);
+      iwrap.appendChild(img);
+      var rm = el('button', 'mini-btn danger', '사진 제거');
+      rm.addEventListener('click', function () {
+        if (item.image.indexOf('content/media/') === 0) apiDelete(item.image);
+        item.image = '';
+        setDirty(); render();
+      });
+      iwrap.appendChild(rm);
+    } else {
+      iwrap.appendChild(uploadButton('+ 사진 추가', 'image/*', false, item.id, function (paths) {
+        item.image = paths[0];
+        setDirty(); render();
+      }));
+    }
+    main.appendChild(field('사진 (선택)', iwrap,
+      '한 장만 들어갑니다. 목록 오른쪽에 작게 걸립니다 (모바일에서는 글 아래로 내려갑니다). 가로 사진이 잘 맞습니다.'));
+
+    /* 관련 작품·연구 — 누르면 그 상세로 건너간다 */
+    var relWrap = el('div', 'check-grid');
+    var pool = (DATA.works || []).map(function (w) { return ['작품 · ' + (w.title || w.id), w.id]; })
+      .concat((DATA.studies || []).map(function (s) { return ['연구 · ' + (s.title || s.id), s.id]; }));
+    pool.forEach(function (o) {
+      relWrap.appendChild(checkbox((item.related || []).indexOf(o[1]) >= 0, function (on) {
+        var arr = (item.related || []).filter(function (k) { return k !== o[1]; });
+        if (on) arr.push(o[1]);
+        item.related = arr;
+      }, o[0]));
+    });
+    if (!pool.length) relWrap.appendChild(el('p', 'field-hint', '등록된 작업·연구가 없습니다.'));
+    main.appendChild(field('관련 작품 · 연구 (선택)', relWrap,
+      '수상작이나 학회에 가져간 작업을 고르면, 이 소식 아래에 그 작품의 작은 미리보기가 걸리고 눌러서 상세 화면으로 갈 수 있습니다.'));
   }
 
   /* ----- 배포 (내 컴퓨터에서 연 관리도구 전용 — 웹에서는 저장이 곧 반영) ----- */
@@ -1275,6 +1316,8 @@
       n.venue = n.venue || '';
       n.note = n.note || '';
       n.href = n.href || '';
+      n.image = n.image || '';
+      n.related = n.related || [];
     });
     DATA.siteTagline = DATA.siteTagline || '';
     DATA.contact = DATA.contact || [];
