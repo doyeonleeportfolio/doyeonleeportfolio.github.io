@@ -6,7 +6,7 @@
   'use strict';
 
   var DATA = window.SITE_DATA || { siteName: 'PORTFOLIO', works: [], studies: [], about: {}, contact: [] };
-  var SECTIONS = ['home', 'works', 'about', 'contact', 'studies', 'news'];
+  var SECTIONS = ['home', 'works', 'about', 'contact', 'studies', 'cv'];
 
   /* 홈 문양의 주제 키 ↔ 표시 이름 (home.js MOTIFS 와 같은 어휘) */
   var THEME_LABELS = {
@@ -23,7 +23,7 @@
     home: document.getElementById('view-home'),
     works: document.getElementById('view-works'),
     studies: document.getElementById('view-studies'),
-    news: document.getElementById('view-news'),
+    cv: document.getElementById('view-cv'),
     about: document.getElementById('view-about'),
     contact: document.getElementById('view-contact')
   };
@@ -482,22 +482,95 @@
     return null;
   }
 
-  function buildNews() {
-    var items = (DATA.news || []).slice();
-    var link = navLinks.filter(function (a) { return a.getAttribute('data-view') === 'news'; })[0];
-    /* 소식이 하나도 없으면 메뉴에서 감춘다 — 빈 방은 보여 주지 않는다 */
-    if (link) link.style.display = items.length ? '' : 'none';
-    if (!items.length) return;
+  /* CV 페이지의 묶음 순서 — 성과가 먼저, 활동이 뒤 */
+  var CV_GROUPS = [
+    ['award', 'Awards'],
+    ['scholarship', 'Scholarships'],
+    ['conference', 'Conferences'],
+    ['talk', 'Talks'],
+    ['exhibition', 'Exhibitions'],
+    ['press', 'Press'],
+    ['residency', 'Residencies'],
+    ['service', 'Service']
+  ];
 
-    var v = stage.news;
-    v.textContent = '';
-    v.appendChild(el('p', 'view-label', 'News'));
-    items.sort(function (a, b) {
-      var ka = newsKey(a.date), kb = newsKey(b.date);
-      return ka < kb ? 1 : ka > kb ? -1 : 0;   // 최신이 위
+  function byNewest(a, b) {
+    var ka = newsKey(a.date), kb = newsKey(b.date);
+    return ka < kb ? 1 : ka > kb ? -1 : 0;
+  }
+
+  /* About 의 CV 텍스트 — 한 줄 = 한 항목 */
+  function cvLines(ab) {
+    var cv = Array.isArray(ab.cv) ? ab.cv : String(ab.cv || '').split('\n');
+    return cv.map(function (s) { return String(s).trim(); }).filter(Boolean);
+  }
+
+  /* 연도로 시작하면 행, "- " 로 시작하면 연도 없는 행, 나머지는 소제목 */
+  function cvBlock(lines) {
+    var wrap = el('div', 'about-cv');
+    lines.forEach(function (line) {
+      var m = /^(\d{4}(?:\s*[–-]\s*(?:\d{4}|\d{2}|present)?)?)\s+(.+)$/i.exec(line);
+      if (m) {
+        var r = el('div', 'cv-row');
+        r.appendChild(el('span', 'cv-year', m[1].replace(/\s+/g, '')));
+        r.appendChild(el('span', 'cv-text', m[2]));
+        wrap.appendChild(r);
+      } else if (/^[-–•]\s*/.test(line)) {
+        var r2 = el('div', 'cv-row');
+        r2.appendChild(el('span', 'cv-year', ''));
+        r2.appendChild(el('span', 'cv-text', line.replace(/^[-–•]\s*/, '')));
+        wrap.appendChild(r2);
+      } else {
+        wrap.appendChild(el('div', 'cv-section', line));
+      }
     });
+    return wrap;
+  }
+
+  function buildCv() {
+    var ab = DATA.about || {};
+    var lines = cvLines(ab);
+    var items = (DATA.news || []).slice();
+    var link = navLinks.filter(function (a) { return a.getAttribute('data-view') === 'cv'; })[0];
+    var has = lines.length || items.length || ab.cvPdf;
+    /* 내용이 없으면 메뉴에서 감춘다 — 빈 방은 보여 주지 않는다 */
+    if (link) link.style.display = has ? '' : 'none';
+    if (!has) return;
+
+    var v = stage.cv;
+    v.textContent = '';
+    v.appendChild(el('p', 'view-label', 'CV'));
     var list = el('div', 'news-list');
-    items.forEach(function (n) {
+    if (lines.length) list.appendChild(cvBlock(lines));
+
+    var placed = {};
+    CV_GROUPS.forEach(function (g) {
+      var group = items.filter(function (n) { return String(n.kind || '').toLowerCase() === g[0]; });
+      if (!group.length) return;
+      group.forEach(function (n) { placed[n.id] = true; });
+      list.appendChild(el('h2', 'about-heading', g[1]));
+      group.sort(byNewest).forEach(function (n) { list.appendChild(newsRow(n)); });
+    });
+    /* 목록에 없는 종류도 버리지 않는다 */
+    var rest = items.filter(function (n) { return !placed[n.id]; });
+    if (rest.length) {
+      list.appendChild(el('h2', 'about-heading', 'Other'));
+      rest.sort(byNewest).forEach(function (n) { list.appendChild(newsRow(n)); });
+    }
+
+    if (ab.cvPdf) {
+      var pdf = el('a', 'about-cvlink', 'Download CV (PDF)');
+      pdf.href = ab.cvPdf;
+      pdf.target = '_blank';
+      pdf.rel = 'noopener';
+      list.appendChild(pdf);
+    }
+    v.appendChild(list);
+  }
+
+  /* 한 줄 — 날짜 | 제목·장소·설명·관련작품 | 사진. 종류는 묶음 제목이 이미 말한다 */
+  function newsRow(n) {
+    return (function () {
       /* 줄 전체를 링크로 만들지 않는다 — 안에 관련 작품 링크가 들어가기 때문 */
       var row = el('div', 'news-row');
       row.appendChild(el('span', 'news-date', newsLabel(n.date)));
@@ -514,9 +587,9 @@
       } else {
         main.appendChild(el('div', 'news-title', n.title || ''));
       }
-      var sub = [NEWS_KINDS[String(n.kind || '').toLowerCase()] || '', n.venue].filter(Boolean);
+      var sub = [n.venue].filter(Boolean);
       if (isUpcoming(n.date)) sub.push('Upcoming');
-      main.appendChild(el('div', 'news-sub', sub.join(' · ')));
+      if (sub.length) main.appendChild(el('div', 'news-sub', sub.join(' · ')));
       if (n.note) main.appendChild(el('p', 'news-note', n.note));
 
       /* 이 소식과 묶인 작품·연구 — 눌러서 그 상세로 건너간다 */
@@ -550,9 +623,8 @@
         im.draggable = false;
         row.appendChild(im);
       }
-      list.appendChild(row);
-    });
-    v.appendChild(list);
+      return row;
+    })();
   }
 
   /* ---------- about / contact ---------- */
@@ -596,39 +668,7 @@
       inner.appendChild(el('p', 'about-directions', dirs.join(' · ')));
     }
 
-    /* CV — 한 줄 = 한 항목. 연도로 시작하면 행, "- " 로 시작하면 연도 없는 행, 나머지는 소제목 */
-    var cv = Array.isArray(ab.cv) ? ab.cv : String(ab.cv || '').split('\n');
-    cv = cv.map(function (s) { return String(s).trim(); }).filter(Boolean);
-    if (cv.length) {
-      inner.appendChild(el('h2', 'about-heading', 'CV'));
-      var cvWrap = el('div', 'about-cv');
-      cv.forEach(function (line) {
-        var m = /^(\d{4}(?:\s*[–-]\s*(?:\d{4}|\d{2}|present)?)?)\s+(.+)$/i.exec(line);
-        if (m) {
-          var r = el('div', 'cv-row');
-          r.appendChild(el('span', 'cv-year', m[1].replace(/\s+/g, '')));
-          r.appendChild(el('span', 'cv-text', m[2]));
-          cvWrap.appendChild(r);
-        } else if (/^[-–•]\s*/.test(line)) {
-          var r2 = el('div', 'cv-row');
-          r2.appendChild(el('span', 'cv-year', ''));
-          r2.appendChild(el('span', 'cv-text', line.replace(/^[-–•]\s*/, '')));
-          cvWrap.appendChild(r2);
-        } else {
-          cvWrap.appendChild(el('div', 'cv-section', line));
-        }
-      });
-      inner.appendChild(cvWrap);
-    }
-
-    if (ab.cvPdf) {
-      var pdf = el('a', 'about-cvlink', 'Download CV (PDF)');
-      pdf.href = ab.cvPdf;
-      pdf.target = '_blank';
-      pdf.rel = 'noopener';
-      inner.appendChild(pdf);
-    }
-    v.appendChild(inner);
+    v.appendChild(inner);   /* Education·CV PDF 는 CV 페이지로 옮겼다 */
   }
 
   function contactHref(item) {
@@ -690,8 +730,10 @@
         sec.appendChild(art);
       });
     });
-    if ((DATA.news || []).length) {
-      sec.appendChild(el('h2', null, 'News'));
+    var idxCv = cvLines(DATA.about || {});
+    if (idxCv.length || (DATA.news || []).length) {
+      sec.appendChild(el('h2', null, 'CV'));
+      idxCv.forEach(function (l) { sec.appendChild(el('p', null, l)); });
       (DATA.news || []).forEach(function (n) {
         var art = el('article');
         art.appendChild(el('h3', null, n.title || ''));
@@ -1026,6 +1068,7 @@
       return;
     }
     closeDetail();
+    if (h === 'news') h = 'cv';   // 옛 주소 — 한때 News 였다
     if (SECTIONS.indexOf(h) < 0) h = 'home';
     setSection(h);
   }
@@ -1036,7 +1079,7 @@
 
   buildStrip();
   buildStudies();
-  buildNews();
+  buildCv();
   buildAbout();
   buildContact();
   buildIndex();

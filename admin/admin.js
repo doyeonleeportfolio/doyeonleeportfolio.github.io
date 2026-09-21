@@ -427,7 +427,7 @@
       textarea(Array.isArray(DATA.about.cv) ? DATA.about.cv.join('\n') : (DATA.about.cv || ''), 10, function (v) {
         DATA.about.cv = v.split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
       }),
-      '연도로 시작하는 줄(예: 2026  Time of Materiality — Group Exhibition, Seoul)은 연도 열이 자동 분리됩니다.\n"- " 로 시작하면 연도 없는 항목, 그 외(예: Education / Exhibitions / Awards)는 소제목이 됩니다. 영문 권장.'));
+      'CV 페이지 맨 위에 표시됩니다 (학력 등). 연도로 시작하는 줄(예: 2026  Time of Materiality — Group Exhibition, Seoul)은 연도 열이 자동 분리됩니다.\n"- " 로 시작하면 연도 없는 항목, 그 외(예: Education)는 소제목이 됩니다. 수상·장학·학회는 여기 말고 왼쪽 「CV」 탭에서 항목으로 넣으세요. 영문 권장.'));
 
     // CV PDF
     var pdfWrap = el('div');
@@ -446,7 +446,7 @@
         setDirty(); render();
       }));
     }
-    main.appendChild(field('CV PDF (선택)', pdfWrap, 'About 화면 맨 아래 "Download CV (PDF)" 링크로 표시됩니다.'));
+    main.appendChild(field('CV PDF (선택)', pdfWrap, 'CV 화면 맨 아래 "Download CV (PDF)" 링크로 표시됩니다.'));
 
     // About 이미지
     var wrap = el('div');
@@ -974,9 +974,9 @@
   }
 
   function renderNews() {
-    main.appendChild(el('h2', 'section-title', 'News'));
+    main.appendChild(el('h2', 'section-title', 'CV — 수상 · 장학 · 학회 · 활동'));
     main.appendChild(el('p', 'field-hint',
-      '수상, 학회 참가, 발표, 전시, 기사처럼 날짜가 있는 소식입니다. 사이트에서는 최신순으로 정렬되고, 아직 오지 않은 날짜는 Upcoming 으로 표시됩니다. 하나도 없으면 사이트 메뉴에 News 가 나타나지 않습니다.'));
+      '사이트의 CV 페이지에 종류별(Awards · Scholarships · Conferences · Service …)로 묶여 표시되고, 묶음 안에서는 최신순입니다. 아직 오지 않은 날짜는 Upcoming 으로 표시됩니다. CV 페이지 맨 위의 학력은 「기본 정보」의 CV 칸에서 씁니다.'));
 
     var arr = DATA.news;
     var list = el('div', 'item-list');
