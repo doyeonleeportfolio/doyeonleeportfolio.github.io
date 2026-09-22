@@ -51,7 +51,7 @@ window.SITE_DATA = {
   "works": [
     {
       "id": "bojagi",
-      "title": "Bojagi",
+      "title": "just messed around with claude",
       "year": "2026",
       "cover": "content/media/bojagi/b-4k.png",
       "media": [
