@@ -526,9 +526,12 @@ window.SITE_DATA = {
       "venue": "Sehwa Museum of Art. Seoul",
       "note": "",
       "href": "https://uabr-website.vercel.app/",
-      "related": [],
+      "related": [
+        "time-of-materiality"
+      ],
       "images": [
-        "content/media/unveiling-and-breathing-resonance-showcase/kakaotalk-20260921-230046632.jpg"
+        "content/media/unveiling-and-breathing-resonance-showcase/kakaotalk-20260921-230046632.jpg",
+        "content/media/unveiling-and-breathing-resonance-showcase/74699-3063945-1761879583445893257.png"
       ]
     },
     {
