@@ -50,34 +50,6 @@ window.SITE_DATA = {
   ],
   "works": [
     {
-      "id": "bojagi",
-      "title": "Bojagi",
-      "year": "2026",
-      "cover": "content/media/bojagi/b-4k.png",
-      "media": [
-        {
-          "type": "video",
-          "src": "content/media/bojagi/v1-ghost.mp4",
-          "caption": ""
-        }
-      ],
-      "description": "Jogakbo is a traditional Korean wrapping cloth made by piecing together leftover fabric scraps. In this artwork, delicate silk pieces allow light to filter through, deepening in shade only where the layers overlap. As a wave of stitching sweeps from left to right, pressed petals, pearls, and beads attach to each fragment in turn, only to gently unravel. In this seamlessly looping video, the cloth never truly ends, no matter where you begin watching. Its form was calculated through code, while the fabric textures were rendered using generative AI.",
-      "links": [],
-      "medium": "Single channel video ",
-      "duration": "0:55",
-      "format": "",
-      "role": "",
-      "tools": "HTML5 Canvas 2D, Javascript, ComfyUI",
-      "credits": "",
-      "exhibitions": [],
-      "themes": [
-        "heritage",
-        "data",
-        "moving"
-      ],
-      "descriptionKo": ""
-    },
-    {
       "id": "pompeii-heritage-xr-reseravtion-galaxy-xr",
       "title": "Pompeii Heritage XR Preservation - Galaxy XR",
       "year": "2026",
@@ -166,6 +138,34 @@ window.SITE_DATA = {
       "description": "This study explores the process of reinterpreting the physical properties of the materials that compose Tteoljam — a unique traditional Korean women's ornament — through the use of generative AI. While Tteoljam has traditionally served as a symbol of status and identity, often confined to static museum displays, this research applies Vilém Flusser's theory of technical images to deconstruct and reconstruct these artifacts, thereby attempting a digital \"re-coding\" in a contemporary environment.\n\nThe research process involved an in-depth analysis of the core materials of Tteoljam, such as jade, gold, pearls, coral, and kingfisher feathers, focusing on their luster, transparency, and viscosity. By infusing these properties with creative vision, the materials were visualized anew through generative AI. The resulting work, Time of Materiality, consists of 15 scenes that transform fixed, solid relics into fluid or pulsating organic media, imbuing static artifacts from the past with a sense of flowing temporality.\n\nThis endeavor demonstrates that Korean cultural heritage can transcend mere documentation to undergo creative interpretation, where traditional materialities within a humanistic context are sublimated into artistic tools. Ultimately, this study holds significance by presenting new possibilities for digital heritage through the fusion of technology and tradition, moving beyond simple visual reproduction to offer a transformative experience for the audience.",
       "descriptionKo": "",
       "links": []
+    },
+    {
+      "id": "bojagi",
+      "title": "Bojagi",
+      "year": "2026",
+      "cover": "content/media/bojagi/b-4k.png",
+      "media": [
+        {
+          "type": "video",
+          "src": "content/media/bojagi/v1-ghost.mp4",
+          "caption": ""
+        }
+      ],
+      "description": "Jogakbo is a traditional Korean wrapping cloth made by piecing together leftover fabric scraps. In this artwork, delicate silk pieces allow light to filter through, deepening in shade only where the layers overlap. As a wave of stitching sweeps from left to right, pressed petals, pearls, and beads attach to each fragment in turn, only to gently unravel. In this seamlessly looping video, the cloth never truly ends, no matter where you begin watching. Its form was calculated through code, while the fabric textures were rendered using generative AI.",
+      "links": [],
+      "medium": "Single channel video ",
+      "duration": "0:55",
+      "format": "",
+      "role": "",
+      "tools": "HTML5 Canvas 2D, Javascript, ComfyUI",
+      "credits": "",
+      "exhibitions": [],
+      "themes": [
+        "heritage",
+        "data",
+        "moving"
+      ],
+      "descriptionKo": ""
     },
     {
       "id": "apocalypse-env",
@@ -430,30 +430,6 @@ window.SITE_DATA = {
       "description": "This study extends visual-balance measurement from still images to long-form video. For every frame of 120 tokusatsu episodes — six series spanning Japan's Showa, Heisei and Reiwa eras — it computes a darkness-weighted barycenter from luma values and tracks how that point moves at two temporal scales: across full episodes, and within annotated action scenes.\n\nThe two franchises turn out to differ by time scale rather than by overall dynamism. Super Sentai reallocates the barycenter faster across full episodes; Kamen Rider covers a wider horizontal range within its main action scenes. The same metric yields opposite readings depending on the unit of analysis — which is itself the finding. Manuscript in preparation.",
       "relatedWorks": [],
       "links": []
-    },
-    {
-      "id": "woven-names",
-      "title": "Formalizing Kente Visual Grammar for Cross-Cultural Generative Art",
-      "year": "2026–",
-      "status": "ongoing",
-      "themes": [
-        "heritage",
-        "media",
-        "data"
-      ],
-      "keywords": [
-        "Kente",
-        "Formal Grammar",
-        "Generative Art",
-        "Cross-Cultural Translation",
-        "Computational Craft"
-      ],
-      "summary": "Writes the compositional rules of Asante kente cloth as a testable formal grammar, built from a transcribed corpus and Ghanaian scholarship. A companion artwork weaves the meanings of Korean Hanja given names into new patterns — translation, never equivalence.",
-      "cover": "",
-      "media": [],
-      "description": "",
-      "relatedWorks": [],
-      "links": []
     }
   ],
   "news": [
@@ -468,7 +444,9 @@ window.SITE_DATA = {
       "related": [
         "time-of-materiality"
       ],
-      "images": []
+      "images": [
+        "content/media/2026-hcik/kakaotalk-20261006-235631679.jpg"
+      ]
     },
     {
       "id": "siggraph-asia-2026-sv",
@@ -523,7 +501,9 @@ window.SITE_DATA = {
       "note": "Participated creating video content for OPCD stage.",
       "href": "https://youtu.be/c4cFc5baHug?si=fxPj1qstkHAhrwbS",
       "related": [],
-      "images": []
+      "images": [
+        "content/media/opcd-color-the-beat-mewmung/kakaotalk-20261007-000149218.jpg"
+      ]
     },
     {
       "id": "media-facade-project-jangmiwon-traditional-market",
@@ -564,7 +544,7 @@ window.SITE_DATA = {
     },
     {
       "id": "attended-exhibited-in-hci-korea-2026",
-      "date": "2026-09",
+      "date": "2026-01",
       "kind": "conference",
       "title": "Attended & Exhibited in HCI Korea 2026",
       "venue": "HCIK",
