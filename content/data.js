@@ -451,7 +451,7 @@ window.SITE_DATA = {
     {
       "id": "siggraph-asia-2026-sv",
       "date": "2026-12",
-      "kind": "conference",
+      "kind": "service",
       "title": "Student Volunteer, SIGGRAPH Asia 2026",
       "venue": "ACM SIGGRAPH Asia, Kuala Lumpur",
       "note": "",
