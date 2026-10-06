@@ -26,7 +26,7 @@
 
   /* 문양 5종과 주제 키워드 (Adinkra) */
   var MOTIFS = [
-    { key: 'heritage', label: 'Cultural Heritage',     src: 'assets/pattern/adinkra-heritage.svg' },  // Mate Masie
+    { key: 'heritage', label: 'Digital Heritage',       src: 'assets/pattern/adinkra-heritage.svg' },  // Mate Masie
     { key: 'media',    label: 'Interactive Media Art', src: 'assets/pattern/adinkra-media.svg' },     // Dame-Dame
     { key: 'xr',       label: 'XR',                    src: 'assets/pattern/adinkra-xr.svg' },        // Abode Santann
     { key: 'data',     label: 'Data Analysis',         src: 'assets/pattern/adinkra-data.svg' },      // Nea Onnim No Sua A, Ohu
@@ -45,9 +45,11 @@
       return String(w.title).split(':')[0].split('—')[0].trim();
     });
   }
-  /* 다섯 문양은 같은 크기 — 위계 없이 대등하게 */
-  var SCALES = [1.0, 1.0, 1.0, 1.0, 1.0];
+  /* 주력 두 분야(Digital Heritage · Interactive Media Art)가 크게, 나머지 셋은 곁에 작게.
+     순서는 MOTIFS 와 같다 — heritage, media, xr, data, moving */
+  var SCALES = [1.0, 1.0, 0.58, 0.58, 0.58];
   var MAX_SCALE = Math.max.apply(null, SCALES);
+  var PRIMARY = [0, 1];   // 큰 부조 둘 — 배치에서 대각선 양 끝을 받는다
 
   var canvas = null, gl = null, prog = null, quad = null, texHeight = null;
   var uni = {};
@@ -234,11 +236,19 @@
       x: leftSafe + usableW * 0.5 + (Math.random() - 0.5) * usableW * 0.04,
       y: topSafe + usableH * 0.485 + (Math.random() - 0.5) * usableH * 0.04
     });
-    // 문양 ↔ 자리 무작위 배정 (접속할 때마다 다른 배치)
-    for (var i = cells.length - 1; i > 0; i--) {
+    // 자리 배정 — 큰 둘은 대각선 양 끝(0·3 또는 1·2), 나머지 셋은 남은 자리에 무작위로.
+    // 접속할 때마다 배치가 달라지면서도 큰 부조가 한쪽에 몰리지 않는다 (cells[4] = 중앙)
+    var diag = Math.random() < 0.5 ? [0, 3] : [1, 2];
+    var rest = [0, 1, 2, 3, 4].filter(function (k) { return diag.indexOf(k) < 0; });
+    for (var i = rest.length - 1; i > 0; i--) {
       var j = Math.floor(Math.random() * (i + 1));
-      var t = cells[i]; cells[i] = cells[j]; cells[j] = t;
+      var t = rest[i]; rest[i] = rest[j]; rest[j] = t;
     }
+    var taken = 0;
+    cells = SCALES.map(function (_, k) {
+      var pi = PRIMARY.indexOf(k);
+      return cells[pi >= 0 ? diag[pi] : rest[taken++]];
+    });
 
     // 목표 크기(FX.MOTIF_SIZE)에서 시작해, 서로/가장자리와 충돌하지 않는 최대 크기로 자동 축소
     var maxScale = MAX_SCALE;

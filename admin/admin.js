@@ -112,7 +112,7 @@
 
   /* 홈 문양의 주제 키 — js/home.js MOTIFS 와 같은 어휘 */
   var THEMES = [
-    ['heritage', 'Cultural Heritage'],
+    ['heritage', 'Digital Heritage'],
     ['media', 'Interactive Media Art'],
     ['xr', 'XR'],
     ['data', 'Data Analysis'],
@@ -153,7 +153,10 @@
     });
     if (DATA.about && DATA.about.image) used[DATA.about.image] = true;
     if (DATA.about && DATA.about.cvPdf) used[DATA.about.cvPdf] = true;
-    (DATA.news || []).forEach(function (n) { if (n.image) used[n.image] = true; });
+    (DATA.news || []).forEach(function (n) {
+      if (n.image) used[n.image] = true;   // 옛 데이터 (한 장)
+      (n.images || []).forEach(function (src) { if (src) used[src] = true; });
+    });
     if (DATA.studiesGif) used[DATA.studiesGif] = true;
     return used;
   }
@@ -315,6 +318,103 @@
   document.addEventListener('keydown', function (e) {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); save(); }
   });
+
+  /* ---------- PDF → 페이지 이미지 ---------- */
+
+  /* pdf.js 는 이 기능을 쓸 때만 받아온다 (사이트에는 올라가지 않는다 — 관리도구에서만 쓴다) */
+  var PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+  var PDF_PAGE_W = 1600;   // 페이지 이미지 가로 길이 (px) — 화면으로 보기 충분하고 커밋이 무겁지 않다
+  var pdfjsPromise = null;
+
+  function ensurePdfjs() {
+    if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+    if (pdfjsPromise) return pdfjsPromise;
+    pdfjsPromise = new Promise(function (resolve, reject) {
+      var sc = document.createElement('script');
+      sc.src = PDFJS + 'pdf.min.js';
+      sc.onload = function () {
+        if (!window.pdfjsLib) { reject(new Error('pdf.js 를 읽지 못했습니다')); return; }
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js';
+        resolve(window.pdfjsLib);
+      };
+      sc.onerror = function () {
+        pdfjsPromise = null;
+        reject(new Error('PDF 변환기를 받아오지 못했습니다 — 인터넷 연결을 확인해 주세요'));
+      };
+      document.head.appendChild(sc);
+    });
+    return pdfjsPromise;
+  }
+
+  /* PDF 한 권 → 페이지마다 JPEG 한 장. 사이트는 같은 doc 의 페이지들을 두 칸으로 늘어놓는다 */
+  function rasterizePdf(file, onProgress) {
+    var base = fileSlug(file.name).replace(/\.pdf$/i, '')
+      .replace(/[^0-9a-z]+/g, '-').replace(/^-+|-+$/g, '') || 'pdf';
+    return ensurePdfjs()
+      .then(function () { return file.arrayBuffer(); })
+      .then(function (buf) { return window.pdfjsLib.getDocument({ data: new Uint8Array(buf) }).promise; })
+      .then(function (pdf) {
+        var files = [];
+        var digits = Math.max(2, String(pdf.numPages).length);
+        var at = 0;
+
+        /* 한 장씩 차례로 — 수십 장을 한꺼번에 그리면 브라우저 메모리가 넘친다 */
+        function nextPage() {
+          if (++at > pdf.numPages) return Promise.resolve();
+          var pageNo = at;
+          onProgress(pageNo, pdf.numPages);
+          return pdf.getPage(pageNo).then(function (page) {
+            var vp1 = page.getViewport({ scale: 1 });
+            var vp = page.getViewport({ scale: Math.min(3, PDF_PAGE_W / vp1.width) });
+            var c = document.createElement('canvas');
+            c.width = Math.round(vp.width);
+            c.height = Math.round(vp.height);
+            var ctx = c.getContext('2d');
+            ctx.fillStyle = '#fff';   // PDF 바탕은 투명 — 흰 종이를 깔아 준다
+            ctx.fillRect(0, 0, c.width, c.height);
+            return page.render({ canvasContext: ctx, viewport: vp }).promise.then(function () {
+              return new Promise(function (res) {
+                c.toBlob(function (blob) {
+                  res(new File([blob], base + '-p' + ('0000' + pageNo).slice(-digits) + '.jpg',
+                    { type: 'image/jpeg' }));
+                }, 'image/jpeg', 0.86);
+              });
+            });
+          }).then(function (f) {
+            files.push(f);
+            return nextPage();
+          });
+        }
+
+        return nextPage().then(function () {
+          if (pdf.destroy) pdf.destroy();
+          return { doc: base, files: files };
+        });
+      });
+  }
+
+  /* PDF 에서 나온 페이지들은 한 덩어리로 다룬다 — 한 장씩 옮기면 책이 흩어진다 */
+  function mediaBlock(media, i) {
+    var doc = media[i] && media[i].doc;
+    if (!doc) return [i, i + 1];
+    var a = i, b = i;
+    while (a > 0 && media[a - 1].doc === doc) a--;
+    while (b < media.length && media[b].doc === doc) b++;
+    return [a, b];
+  }
+
+  /* 덩어리 하나를 이웃 덩어리와 통째로 맞바꾼다 */
+  function moveBlock(media, start, end, dir) {
+    if (dir < 0) {
+      if (start === 0) return;
+      var prev = mediaBlock(media, start - 1);
+      media.splice.apply(media, [prev[0], 0].concat(media.splice(start, end - start)));
+    } else {
+      if (end >= media.length) return;
+      var next = mediaBlock(media, end);
+      media.splice.apply(media, [start, 0].concat(media.splice(next[0], next[1] - next[0])));
+    }
+  }
 
   /* ---------- 파일 선택/업로드 공통 ---------- */
 
@@ -626,6 +726,73 @@
     return el('div', 'media-badge', t === 'video' ? 'VIDEO' : t === 'model' ? '3D' : 'LINK');
   }
 
+  function moveBtns(media, start, end) {
+    var btns = el('div', 'row-btns');
+    var up = el('button', 'mini-btn', '↑');
+    up.disabled = start === 0;
+    up.addEventListener('click', function () { moveBlock(media, start, end, -1); setDirty(); render(); });
+    var down = el('button', 'mini-btn', '↓');
+    down.disabled = end >= media.length;
+    down.addEventListener('click', function () { moveBlock(media, start, end, 1); setDirty(); render(); });
+    btns.appendChild(up); btns.appendChild(down);
+    return btns;
+  }
+
+  function mediaRow(media, i) {
+    var m = media[i];
+    var row = el('div', 'media-row');
+    row.appendChild(mediaThumb(m));
+
+    var info = el('div', 'media-info');
+    var cap = document.createElement('input');
+    cap.className = 'media-caption-input';
+    cap.value = m.caption || '';
+    cap.placeholder = '사진/영상 설명 (선택)';
+    cap.addEventListener('input', function () { m.caption = cap.value; setDirty(); });
+    info.appendChild(cap);
+    info.appendChild(el('div', 'media-src', m.src));
+    row.appendChild(info);
+
+    var btns = moveBtns(media, i, i + 1);
+    var del = el('button', 'mini-btn danger', '삭제');
+    del.addEventListener('click', function () {
+      if (!confirm('이 미디어를 삭제할까요?')) return;
+      var t = m.type || extType(m.src);
+      if (t !== 'embed' && m.src && m.src.indexOf('content/media/') === 0) apiDelete(m.src);
+      media.splice(i, 1);
+      setDirty(); render();
+    });
+    btns.appendChild(del);
+    row.appendChild(btns);
+    return row;
+  }
+
+  /* PDF 한 권 = 한 줄. 페이지 수십 장이 목록을 덮지 않게 */
+  function pdfBlockRow(media, blk) {
+    var pages = media.slice(blk[0], blk[1]);
+    var row = el('div', 'media-row');
+    row.appendChild(mediaThumb(pages[0]));
+
+    var info = el('div', 'media-info');
+    info.appendChild(el('div', null, 'PDF · ' + pages.length + '페이지 — 상세 화면에 2열로 펼쳐집니다'));
+    info.appendChild(el('div', 'media-src', pages[0].src.replace(/-p\d+\.jpg$/i, '') + ' — ' + pages.length + '장'));
+    row.appendChild(info);
+
+    var btns = moveBtns(media, blk[0], blk[1]);
+    var del = el('button', 'mini-btn danger', '삭제');
+    del.addEventListener('click', function () {
+      if (!confirm('이 PDF 의 페이지 ' + pages.length + '장을 모두 삭제할까요?')) return;
+      pages.forEach(function (p) {
+        if (p.src && p.src.indexOf('content/media/') === 0) apiDelete(p.src);
+      });
+      media.splice(blk[0], blk[1] - blk[0]);
+      setDirty(); render();
+    });
+    btns.appendChild(del);
+    row.appendChild(btns);
+    return row;
+  }
+
   function renderEditor() {
     var item = findEditing();
     if (!item) { editing = null; render(); return; }
@@ -718,45 +885,13 @@
     /* 미디어 */
     var mwrap = el('div');
     var mlist = el('div', 'media-list');
-    (item.media || []).forEach(function (m, i) {
-      var row = el('div', 'media-row');
-      row.appendChild(mediaThumb(m));
-
-      var info = el('div', 'media-info');
-      var cap = document.createElement('input');
-      cap.className = 'media-caption-input';
-      cap.value = m.caption || '';
-      cap.placeholder = '사진/영상 설명 (선택)';
-      cap.addEventListener('input', function () { m.caption = cap.value; setDirty(); });
-      info.appendChild(cap);
-      info.appendChild(el('div', 'media-src', m.src));
-      row.appendChild(info);
-
-      var btns = el('div', 'row-btns');
-      var up = el('button', 'mini-btn', '↑');
-      up.disabled = i === 0;
-      up.addEventListener('click', function () {
-        item.media.splice(i - 1, 0, item.media.splice(i, 1)[0]);
-        setDirty(); render();
-      });
-      var down = el('button', 'mini-btn', '↓');
-      down.disabled = i === item.media.length - 1;
-      down.addEventListener('click', function () {
-        item.media.splice(i + 1, 0, item.media.splice(i, 1)[0]);
-        setDirty(); render();
-      });
-      var del = el('button', 'mini-btn danger', '삭제');
-      del.addEventListener('click', function () {
-        if (!confirm('이 미디어를 삭제할까요?')) return;
-        var t = m.type || extType(m.src);
-        if (t !== 'embed' && m.src && m.src.indexOf('content/media/') === 0) apiDelete(m.src);
-        item.media.splice(i, 1);
-        setDirty(); render();
-      });
-      btns.appendChild(up); btns.appendChild(down); btns.appendChild(del);
-      row.appendChild(btns);
-      mlist.appendChild(row);
-    });
+    var media = item.media || (item.media = []);
+    var mi = 0;
+    while (mi < media.length) {
+      var blk = mediaBlock(media, mi);
+      mlist.appendChild(media[mi].doc ? pdfBlockRow(media, blk) : mediaRow(media, mi));
+      mi = blk[1];
+    }
     mwrap.appendChild(mlist);
 
     var urow = el('div', 'upload-row');
@@ -766,6 +901,39 @@
       });
       setDirty(); render();
     }));
+    var PDF_LABEL = '+ PDF 추가 (모든 페이지를 이미지로)';
+    var pdfBtn = el('button', 'upload-btn', PDF_LABEL);
+    pdfBtn.addEventListener('click', function () {
+      pickFiles('application/pdf,.pdf', false, function (files) {
+        pdfBtn.classList.add('busy');
+        pdfBtn.textContent = 'PDF 를 읽는 중…';
+        rasterizePdf(files[0], function (n, total) {
+          pdfBtn.textContent = '페이지 변환 중… ' + n + ' / ' + total;
+        }).then(function (out) {
+          pdfBtn.textContent = '업로드 중… (' + out.files.length + '장)';
+          /* 같은 항목에 PDF 를 두 권 넣어도 묶음이 섞이지 않게 — doc 은 유일해야 한다 */
+          var taken = {};
+          item.media.forEach(function (m) { if (m.doc) taken[m.doc] = true; });
+          var doc = out.doc, n = 2;
+          while (taken[doc]) doc = out.doc + '-' + (n++);
+          uploadInto(item.id, out.files, function (err, paths) {
+            pdfBtn.classList.remove('busy');
+            pdfBtn.textContent = PDF_LABEL;
+            if (err) toast('업로드 실패: ' + err.message);
+            paths.forEach(function (p) {
+              item.media.push({ type: 'image', src: p, caption: '', doc: doc });
+            });
+            if (paths.length) { setDirty(); render(); }
+          });
+        }).catch(function (e) {
+          pdfBtn.classList.remove('busy');
+          pdfBtn.textContent = PDF_LABEL;
+          toast(e.message);
+        });
+      });
+    });
+    urow.appendChild(pdfBtn);
+
     var embedBtn = el('button', 'upload-btn', '+ YouTube / Vimeo 링크 추가');
     embedBtn.addEventListener('click', function () {
       var url = prompt('YouTube 또는 Vimeo 영상 주소를 붙여넣으세요');
@@ -777,7 +945,7 @@
     mwrap.appendChild(urow);
 
     main.appendChild(field('미디어 (위에서부터 순서대로 표시)', mwrap,
-      '이미지: jpg/png/webp · 영상: mp4 권장 (50MB 이하) · 3D: .glb 권장 (Blender에서 내보내기 → glTF 2.0).\n첫 번째 미디어가 영상이면 첫 화면에서 마우스를 올렸을 때 자동 재생됩니다 — 구간은 아래에서 정합니다.'));
+      '이미지: jpg/png/webp · 영상: mp4 권장 (50MB 이하) · 3D: .glb 권장 (Blender에서 내보내기 → glTF 2.0).\n첫 번째 미디어가 영상이면 첫 화면에서 마우스를 올렸을 때 자동 재생됩니다 — 구간은 아래에서 정합니다.\nPDF 를 넣으면 모든 페이지가 이미지로 바뀌어 상세 화면에 2열(왼·오)로 쭉 펼쳐집니다. 페이지가 많으면 조금 걸리니 변환이 끝날 때까지 이 탭을 열어 두세요.'));
 
     if (isWork) renderHoverControls(item);
 
@@ -1019,7 +1187,7 @@
         venue: '',
         note: '',
         href: '',
-        image: '',
+        images: [],
         related: []
       };
       arr.push(item);
@@ -1056,27 +1224,47 @@
     main.appendChild(field('링크 (선택)', input(item.href, function (v) { item.href = v.trim(); }, 'https://…'),
       '학회·공고·기사 주소. 넣으면 제목이 링크가 되고 옆에 ↗ 가 붙습니다.'));
 
-    /* 사진 한 장 — 상장, 현장 사진, 기사 캡처 */
+    /* 사진 — 여러 장 (상장, 현장 사진, 기사 캡처) */
     var iwrap = el('div');
-    if (item.image) {
-      var img = el('img', 'cover-preview');
-      img.src = mediaUrl(item.image);
-      iwrap.appendChild(img);
-      var rm = el('button', 'mini-btn danger', '사진 제거');
-      rm.addEventListener('click', function () {
-        if (item.image.indexOf('content/media/') === 0) apiDelete(item.image);
-        item.image = '';
+    var ilist = el('div', 'media-list');
+    (item.images || []).forEach(function (src, i) {
+      var row = el('div', 'media-row');
+      var th = el('img', 'media-thumb');
+      th.src = mediaUrl(src);
+      row.appendChild(th);
+      var info = el('div', 'media-info');
+      info.appendChild(el('div', 'media-src', src));
+      row.appendChild(info);
+      var btns = el('div', 'row-btns');
+      var up = el('button', 'mini-btn', '↑');
+      up.disabled = i === 0;
+      up.addEventListener('click', function () {
+        item.images.splice(i - 1, 0, item.images.splice(i, 1)[0]);
         setDirty(); render();
       });
-      iwrap.appendChild(rm);
-    } else {
-      iwrap.appendChild(uploadButton('+ 사진 추가', 'image/*', false, item.id, function (paths) {
-        item.image = paths[0];
+      var down = el('button', 'mini-btn', '↓');
+      down.disabled = i === item.images.length - 1;
+      down.addEventListener('click', function () {
+        item.images.splice(i + 1, 0, item.images.splice(i, 1)[0]);
         setDirty(); render();
-      }));
-    }
-    main.appendChild(field('사진 (선택)', iwrap,
-      '한 장만 들어갑니다. 목록 오른쪽에 작게 걸립니다 (모바일에서는 글 아래로 내려갑니다). 가로 사진이 잘 맞습니다.'));
+      });
+      var rm = el('button', 'mini-btn danger', '삭제');
+      rm.addEventListener('click', function () {
+        if (src.indexOf('content/media/') === 0) apiDelete(src);
+        item.images.splice(i, 1);
+        setDirty(); render();
+      });
+      btns.appendChild(up); btns.appendChild(down); btns.appendChild(rm);
+      row.appendChild(btns);
+      ilist.appendChild(row);
+    });
+    iwrap.appendChild(ilist);
+    iwrap.appendChild(uploadButton('+ 사진 추가 (여러 장 선택 가능)', 'image/*', true, item.id, function (paths) {
+      item.images = (item.images || []).concat(paths);
+      setDirty(); render();
+    }));
+    main.appendChild(field('사진 (선택 · 여러 장)', iwrap,
+      '목록 오른쪽에 작게 걸립니다 (모바일에서는 글 아래로 내려갑니다). 위에서부터 차례로 놓이고, 가로 사진이 잘 맞습니다.'));
 
     /* 관련 작품·연구 — 누르면 그 상세로 건너간다 */
     var relWrap = el('div', 'check-grid');
@@ -1318,7 +1506,10 @@
       n.venue = n.venue || '';
       n.note = n.note || '';
       n.href = n.href || '';
-      n.image = n.image || '';
+      /* 사진은 여러 장 — 옛 데이터(image 한 장)는 첫 장으로 옮긴다 */
+      n.images = Array.isArray(n.images) ? n.images.filter(Boolean) : [];
+      if (!n.images.length && n.image) n.images = [n.image];
+      delete n.image;
       n.related = n.related || [];
     });
     DATA.siteTagline = DATA.siteTagline || '';

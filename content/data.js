@@ -6,12 +6,12 @@ window.SITE_DATA = {
     "statement": "I am a researcher dedicated to preserving cultural heritage through the lens of visual arts. I believe that new media is not just a digital canvas, but a vital tool for safeguarding historical artifacts and narratives for future generations. By merging immersive technologies with historical research, I create interactive experiences that breathe new life into our shared past.",
     "bio": "",
     "directions": [
-      "Interactive Installation",
-      "XR & Immersive Space",
-      "Real-time Engines",
-      "Generative AI as Material",
+      "Interactive Media Art",
       "Digital Heritage",
-      "Synesthesia"
+      "XR & Immersive Space",
+      "Interactive Installation",
+      "Real-time Engines",
+      "Generative AI as Material"
     ],
     "cv": [
       "Education",
@@ -51,7 +51,7 @@ window.SITE_DATA = {
   "works": [
     {
       "id": "bojagi",
-      "title": "just messed around with claude",
+      "title": "Bojagi",
       "year": "2026",
       "cover": "content/media/bojagi/b-4k.png",
       "media": [
@@ -79,7 +79,7 @@ window.SITE_DATA = {
     },
     {
       "id": "pompeii-heritage-xr-reseravtion-galaxy-xr",
-      "title": "Pompeii Heritage XR Reservation - Galaxy XR",
+      "title": "Pompeii Heritage XR Preservation - Galaxy XR",
       "year": "2026",
       "cover": "",
       "media": [
@@ -465,10 +465,10 @@ window.SITE_DATA = {
       "venue": "",
       "note": "",
       "href": "",
-      "image": "",
       "related": [
         "time-of-materiality"
-      ]
+      ],
+      "images": []
     },
     {
       "id": "siggraph-asia-2026-sv",
@@ -478,8 +478,8 @@ window.SITE_DATA = {
       "venue": "ACM SIGGRAPH Asia, Kuala Lumpur",
       "note": "",
       "href": "https://asia.siggraph.org/2026/",
-      "image": "",
-      "related": []
+      "related": [],
+      "images": []
     },
     {
       "id": "contest-to-revitalize-traditional-markets-grand-prize",
@@ -489,8 +489,8 @@ window.SITE_DATA = {
       "venue": "Duksung Women's University",
       "note": "",
       "href": "https://www.joongang.co.kr/article/25402359",
-      "image": "",
-      "related": []
+      "related": [],
+      "images": []
     },
     {
       "id": "dswu-global-challenger-scholarship",
@@ -500,8 +500,8 @@ window.SITE_DATA = {
       "venue": "",
       "note": "Selected as a \"Duksung Global Challenger\" (Granted ₩10M for Overseas Research)",
       "href": "",
-      "image": "",
-      "related": []
+      "related": [],
+      "images": []
     },
     {
       "id": "vice-president-college-of-future-talents-dswu",
@@ -511,8 +511,8 @@ window.SITE_DATA = {
       "venue": "",
       "note": "",
       "href": "",
-      "image": "",
-      "related": []
+      "related": [],
+      "images": []
     },
     {
       "id": "opcd-color-the-beat-mewmung",
@@ -522,8 +522,8 @@ window.SITE_DATA = {
       "venue": "OPCD, Dobong-gu",
       "note": "Participated creating video content for OPCD stage.",
       "href": "https://youtu.be/c4cFc5baHug?si=fxPj1qstkHAhrwbS",
-      "image": "",
-      "related": []
+      "related": [],
+      "images": []
     },
     {
       "id": "media-facade-project-jangmiwon-traditional-market",
@@ -533,10 +533,10 @@ window.SITE_DATA = {
       "venue": "",
       "note": "Participated directing and creating media facade video for traditional market in Jangmiwon market (located in Seoul)",
       "href": "",
-      "image": "",
       "related": [
         "rose-for-media-facade"
-      ]
+      ],
+      "images": []
     },
     {
       "id": "unveiling-and-breathing-resonance-showcase",
@@ -546,8 +546,10 @@ window.SITE_DATA = {
       "venue": "Sehwa Museum of Art. Seoul",
       "note": "",
       "href": "https://uabr-website.vercel.app/",
-      "image": "content/media/unveiling-and-breathing-resonance-showcase/kakaotalk-20260921-230046632.jpg",
-      "related": []
+      "related": [],
+      "images": [
+        "content/media/unveiling-and-breathing-resonance-showcase/kakaotalk-20260921-230046632.jpg"
+      ]
     },
     {
       "id": "academic-conference-hosted-by-the-college-of-future-talents-dswu",
@@ -557,8 +559,8 @@ window.SITE_DATA = {
       "venue": "",
       "note": "Outstanding Paper Award | Academic Conference hosted by the College of Future Talents(DSWU)",
       "href": "",
-      "image": "",
-      "related": []
+      "related": [],
+      "images": []
     },
     {
       "id": "attended-exhibited-in-hci-korea-2026",
@@ -568,8 +570,8 @@ window.SITE_DATA = {
       "venue": "HCIK",
       "note": "",
       "href": "",
-      "image": "",
-      "related": []
+      "related": [],
+      "images": []
     }
   ],
   "studiesGif": "content/media/studies/giphy.gif"

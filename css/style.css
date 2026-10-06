@@ -143,7 +143,8 @@ img, video { display: block; }
 .view { position: absolute; inset: 0; }
 .view[hidden] { display: none; }
 
-/* 뷰 진입 — 내용이 바닥에서 조용히 떠오른다 (works는 자체 리듬이 있어 제외) */
+/* 뷰 진입 — 내용이 바닥에서 조용히 떠오른다 */
+.view-works > *,
 .view-studies > *,
 .view-cv > *,
 .view-about > *,
@@ -151,6 +152,7 @@ img, video { display: block; }
   animation: view-in 0.6s var(--ease) backwards;
 }
 /* 이름표가 먼저, 내용은 반 박자 뒤에 */
+.view-works > * + *,
 .view-studies > * + *,
 .view-cv > * + *,
 .view-about > * + *,
@@ -170,6 +172,7 @@ img, video { display: block; }
 }
 
 /* 네이브 기둥선 — 콘텐츠 페이지의 수직 축. 헤더의 수평선과 십자 구도를 이룬다 */
+.view-works::before,
 .view-studies::before,
 .view-cv::before,
 .view-about::before,
@@ -267,159 +270,105 @@ body.on-home .site-header { background: transparent; }
 }
 .home-sat.on { opacity: 0.62; }
 
-/* ---------- works strip ---------- */
+/* ---------- works grid ---------- */
 
 .view-works {
-  overflow-x: auto;
-  overflow-y: hidden;
-  display: flex;
-  align-items: center;
-  scrollbar-width: none;
-  cursor: grab;
-}
-.view-works::-webkit-scrollbar { display: none; }
-.view-works.dragging { cursor: grabbing; }
-
-.strip {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 28px;
-  padding: 0 calc(var(--nav-w) + var(--pad-x)) 0 calc(var(--nav-w) + var(--pad-x));
-  height: 100%;
+  overflow-y: auto;
+  padding: 40px var(--pad-x) 80px calc(var(--nav-w) + var(--pad-x));
 }
 
-/* 갤러리 걸이줄 — 기둥축(200px)에서 발원해 작품 뒤로 이어지는 수평 기준선 */
-.strip::before {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  left: var(--nav-w); right: 0;
-  top: 50%;
-  height: 1px;
-  background: var(--black);
-  opacity: var(--line-faint);
+/* 벽 하나를 훑는 대신 한눈에 — 2열, 넓은 화면에서 3열 */
+.works-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 56px 40px;        /* 40 = 1M · 56 = 1.4M — 세로가 더 넉넉해 이름표가 다음 줄에 붙지 않는다 */
+  max-width: 1400px;
+}
+@media (min-width: 1500px) {
+  .works-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
-.strip-item {
-  flex: none;
-  position: relative;
-  height: min(56vh, 600px);
-  animation: strip-in 0.85s var(--ease) backwards;
-  animation-delay: calc(min(var(--i) * 80ms, 480ms));
+.work-item {
+  display: block;
+  animation: work-in 0.7s var(--ease) backwards;
+  animation-delay: calc(min(var(--i) * 60ms, 420ms));
   transition: transform 0.4s var(--ease);
 }
 
 /* 부조가 떠오르듯 — hover 시 작품이 벽에서 살짝 들린다 */
-.strip-item:hover { transform: translateY(-8px); }
+.work-item:hover { transform: translateY(-8px); }
 
-/* 갤러리 벽의 세로 리듬 — 톱니가 아니라 숨쉬는 걸이. 4주기로 눈높이가 오르내린다 */
-.strip-item:nth-child(4n+1) { margin-bottom: 6vh; }
-.strip-item:nth-child(4n+2) { margin-top: 8vh; }
-.strip-item:nth-child(4n+3) { margin-bottom: 2vh; }
-.strip-item:nth-child(4n)   { margin-top: 4vh; }
+@keyframes work-in {
+  from { opacity: 0; transform: translateY(24px); }
+}
+
+/* 16:9 틀 — 비율이 다른 작업도 잘리지 않고 이 안에 앉는다 (남는 자리는 흰 벽) */
+.work-media {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+
+.work-media > img,
+.work-media > video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
 
 /* hover 프리뷰(영상 하이라이트 / 3D 뷰어) — 대표이미지 위에 겹쳐 두고 hover 시에만 페이드인 */
-.strip-item .strip-preview {
+.work-media .work-preview {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
   opacity: 0;
   transition: opacity 0.4s var(--ease);   /* 들림(0.4s)과 같은 박자로 드러난다 */
   pointer-events: none;
 }
 
-.strip-item.previewing .strip-preview.is-ready {
-  opacity: 1;
-}
+.work-item.previewing .work-preview.is-ready { opacity: 1; }
 
-.strip-preview3d canvas {
+.work-preview3d canvas {
   display: block;
   width: 100%;
   height: 100%;
 }
 
-/* 시작 상태는 keyframe에만 둔다 — 애니메이션이 실행되지 않는 환경에서도 작업물이 항상 보이도록 */
-@keyframes strip-in {
-  from { opacity: 0; transform: translateX(60px); }
-}
-
-.strip-item img,
-.strip-item video {
-  height: 100%;
-  width: auto;
-  max-width: none;
-  user-select: none;
-  -webkit-user-drag: none;
-}
-
-/* 벽은 데스크톱에서 침묵한다 — 제목은 커서 라벨이 말한다.
-   hover가 없는 터치 기기에서만 작품 아래에 이름표가 걸린다 */
-.strip-caption {
-  display: none;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  margin-top: 10px;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: var(--ls-label);
-  text-transform: uppercase;
-  max-width: 100%;
-  white-space: normal;
-  opacity: var(--muted);
-}
-@media (hover: none) {
-  .strip-caption { display: block; }
-}
-
-/* 벽의 현재 위치 — 선 위를 미끄러지는 짧은 선 하나 */
-.strip-progress {
-  position: fixed;
-  bottom: 40px;
-  left: var(--nav-w);   /* 선의 축(200px) — 걸이줄·기둥과 같은 계보 */
-  width: 140px;
-  height: 1px;
-  background: rgba(0, 0, 0, var(--line-faint));
-  pointer-events: none;
-}
-.strip-progress i {
-  position: absolute;
-  top: 0; left: 0;
+/* 작품 이름표 — 격자는 목록이므로 늘 걸려 있고, hover 때 또렷해진다 */
+.work-caption {
   display: block;
-  width: 28px;
-  height: 1px;
-  background: var(--black);
-}
-
-.strip-empty {
-  padding-left: calc(var(--nav-w) + var(--pad-x));
-  font-size: 13px;
-  letter-spacing: 0;   /* 국문 문장 — 라틴 자간 금지 */
+  margin-top: 14px;
   opacity: var(--muted);
+  transition: opacity 0.25s var(--ease);
 }
+.work-item:hover .work-caption,
+.work-item:focus-visible .work-caption { opacity: 1; }
 
-/* ---------- cursor label ---------- */
-
-.cursor-label {
-  position: fixed;
-  top: 0; left: 0;
-  z-index: 60;
-  pointer-events: none;
-  color: var(--white);
-  mix-blend-mode: difference;
+.work-title {
+  display: block;
   font-size: 12px;
   font-weight: 500;
   letter-spacing: var(--ls-label);
   text-transform: uppercase;
-  line-height: 1;
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 0.2s var(--ease);
+  line-height: 1.4;
 }
-.cursor-label.on { opacity: 1; }
+
+.work-sub {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  letter-spacing: var(--ls-data);
+  line-height: 1.4;
+}
+
+.list-empty {
+  font-size: 13px;
+  letter-spacing: 0;   /* 국문 문장 — 라틴 자간 금지 */
+  opacity: var(--muted);
+}
 
 /* ---------- studies list ---------- */
 
@@ -593,13 +542,21 @@ body.on-home .site-header { background: transparent; }
   letter-spacing: var(--ls-data);
 }
 
-/* 소식 사진 — Research 썸네일과 같은 척도 */
+/* 소식 사진 — Research 썸네일과 같은 척도. 여러 장이면 오른쪽에서 접힌다 */
+.news-thumbs {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  max-width: 232px;
+  margin-left: auto;
+}
 .news-thumb {
   flex: none;
   width: 112px;
   height: 63px;
   object-fit: cover;
-  margin-left: auto;
 }
 
 /* ---------- about / contact ---------- */
@@ -824,6 +781,21 @@ body.on-home .site-header { background: transparent; }
 
 .detail-media + .detail-media { margin-top: 56px; }
 
+/* PDF 에서 나온 페이지들 — 왼·오, 왼·오 내려가는 두 칸 (책장을 펼친 결) */
+.detail-pages {
+  max-width: 960px;
+  margin: 0 auto 16px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+.detail-pages img {
+  width: 100%;
+  height: auto;
+}
+.detail-pages + .detail-media,
+.detail-media + .detail-pages { margin-top: 56px; }
+
 /* 3D viewer */
 .viewer3d {
   position: relative;
@@ -930,8 +902,9 @@ body.on-home .site-header { background: transparent; }
 /* ---------- reduced motion ---------- */
 
 @media (prefers-reduced-motion: reduce) {
-  .strip-item { animation-duration: 0.01s; animation-delay: 0s; }
+  .work-item { animation-duration: 0.01s; animation-delay: 0s; }
   .detail-overlay { transition: none; }
+  .view-works > *,
   .view-studies > *,
   .view-cv > *,
   .view-about > *,
@@ -961,33 +934,10 @@ body.on-home .site-header { background: transparent; }
 
   #stage { inset: calc(var(--header-h) + 50px) 0 0 0; }
 
-  .strip { padding: 0 var(--pad-x); }
-  .strip::before { left: 0; }
-  /* 모바일 — 세로 화면에서 높이 기준으로 재면 16:9 작업의 가로가 화면 밖으로 나간다.
-     재는 기준을 폭으로 뒤집어 한 점이 항상 통째로 보이게 한다 */
-  .strip-item {
-    height: auto;
-    /* 세로 화면에선 화면 폭에, 가로 화면에선 높이 62vh 에 맞춘다 */
-    width: min(calc(100vw - var(--pad-x) * 2), calc(62vh * 16 / 9));
-  }
-  .strip-item img,
-  .strip-item video {
-    display: block;
-    width: 100%;
-    height: auto;
-    /* 지연 로딩 이미지가 도착하기 전에도 자리를 잡아 둔다 — 없으면 높이 0 으로 접힌다 */
-    aspect-ratio: 16 / 9;
-    object-fit: contain;   /* 16:9 가 아닌 작업도 잘리거나 늘어나지 않는다 */
-  }
-  .strip-progress { left: var(--pad-x); bottom: 24px; }
+  /* 좁은 화면에선 한 칸 — 작은 두 칸에 든 작업은 아무것도 보여주지 못한다 */
+  .works-grid { grid-template-columns: 1fr; gap: 40px; max-width: none; }
 
-  /* 데스크톱의 세로 리듬(4주기 오르내림)은 한 점씩 보는 모바일에선
-     어긋나게만 보인다 — 모두 걸이줄 위에 가지런히 걸린다 */
-  .strip-item:nth-child(4n+1),
-  .strip-item:nth-child(4n+2),
-  .strip-item:nth-child(4n+3),
-  .strip-item:nth-child(4n) { margin-top: 0; margin-bottom: 0; }
-
+  .view-works,
   .view-studies,
   .view-cv,
   .view-about,
@@ -996,6 +946,7 @@ body.on-home .site-header { background: transparent; }
   }
 
   /* 모바일 — 메뉴가 가로로 눕고 기둥선의 자리가 사라진다 */
+  .view-works::before,
   .view-studies::before,
   .view-cv::before,
   .view-about::before,
@@ -1018,6 +969,7 @@ body.on-home .site-header { background: transparent; }
     height: auto;
     margin: 16px 0 0;
   }
+  .news-thumbs { max-width: 100%; justify-content: flex-start; }
   .news-rel-thumb { width: 80px; height: 45px; }
   .meta-label { width: 84px; }
   .cv-year { width: 72px; }
@@ -1025,6 +977,7 @@ body.on-home .site-header { background: transparent; }
   .detail-title { font-size: 18px; letter-spacing: var(--ls-label); }
   .detail-body { padding: 32px var(--pad-x) 100px; }
   .detail-desc { margin-top: 56px; }
+  .detail-pages { grid-template-columns: 1fr; }
   .viewer3d { height: 56vh; }
   .contact-label { width: 84px; }
 }

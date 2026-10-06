@@ -10,7 +10,7 @@
 
   /* 홈 문양의 주제 키 ↔ 표시 이름 (home.js MOTIFS 와 같은 어휘) */
   var THEME_LABELS = {
-    heritage: 'Cultural Heritage',
+    heritage: 'Digital Heritage',
     media: 'Interactive Media Art',
     xr: 'XR',
     data: 'Data Analysis',
@@ -33,7 +33,6 @@
   var overlayYear = document.getElementById('detailYear');
   var overlayBody = document.getElementById('detailBody');
   var overlayClose = document.getElementById('detailClose');
-  var cursorLabel = document.getElementById('cursorLabel');
 
   var lastSection = 'home';
   var lastFocus = null;
@@ -117,33 +116,36 @@
   document.getElementById('siteName').textContent = siteName;
   // document.title 은 index.html 의 SEO 제목을 그대로 둔다 (검색엔진은 렌더된 제목을 읽는다)
 
-  /* ---------- works strip ---------- */
+  /* ---------- works grid ---------- */
 
-  function buildStrip() {
+  function buildWorks() {
     var v = stage.works;
     v.textContent = '';
+    v.appendChild(el('p', 'view-label', 'Works'));
     if (!DATA.works || !DATA.works.length) {
-      v.appendChild(el('p', 'strip-empty', 'No works yet.'));
+      v.appendChild(el('p', 'list-empty', 'No works yet.'));
       return;
     }
-    var strip = el('div', 'strip');
-    /* 터치 기기: hover가 없으니 벽 중앙에 온 작품이 스스로 재생된다 */
+    var grid = el('div', 'works-grid');
+    /* 터치 기기: hover가 없으니 화면 가운데 들어온 작품이 스스로 재생된다 */
     var touchMode = window.matchMedia && window.matchMedia('(hover: none)').matches;
     var touchIO = null;
     if (touchMode && window.IntersectionObserver) {
       touchIO = new IntersectionObserver(function (entries) {
         entries.forEach(function (en) {
           if (!en.target._pv) return;
-          if (en.intersectionRatio >= 0.7) en.target._pv.enter();
+          if (en.intersectionRatio >= 0.6) en.target._pv.enter();
           else en.target._pv.leave();
         });
-      }, { root: v, threshold: [0, 0.7] });
+      }, { root: v, threshold: [0, 0.6] });
     }
     DATA.works.forEach(function (w, i) {
-      var a = el('a', 'strip-item');
+      var a = el('a', 'work-item');
       a.href = '#w/' + encodeURIComponent(w.id);
       a.style.setProperty('--i', i);
       a.setAttribute('aria-label', w.title || '');
+      /* 16:9 틀 — 비율이 다른 작업도 잘리지 않고 이 안에 앉는다 (남는 자리는 흰 벽) */
+      var box = el('div', 'work-media');
 
       var firstMedia = (w.media && w.media[0]) || null;
       var modelMedia = null;
@@ -216,8 +218,8 @@
           node.alt = w.title || '';
           node.loading = i > 5 ? 'lazy' : 'eager';
           node.draggable = false;
-          vid.className = 'strip-preview is-ready';
-          a.appendChild(vid);
+          vid.className = 'work-preview is-ready';
+          box.appendChild(vid);
         } else {
           node = vid;
         }
@@ -229,8 +231,8 @@
         node.loading = i > 5 ? 'lazy' : 'eager';
         node.draggable = false;
 
-        var box3d = el('div', 'strip-preview strip-preview3d');
-        a.appendChild(box3d);
+        var box3d = el('div', 'work-preview work-preview3d');
+        box.appendChild(box3d);
 
         var hoverViewer = null;
         var mounting3d = false;
@@ -248,7 +250,7 @@
             hoverViewer.setActive(a.classList.contains('previewing'));
           }).catch(function (e) {
             mounting3d = false;
-            if (window.console && console.error) console.error('[strip3d]', e);
+            if (window.console && console.error) console.error('[grid3d]', e);
           });
         });
         a.addEventListener('mousemove', function (e) {
@@ -270,112 +272,19 @@
         node.loading = i > 5 ? 'lazy' : 'eager';
         node.draggable = false;
       }
-      a.appendChild(node);
+      box.appendChild(node);
+      a.appendChild(box);
 
-      /* 터치 기기 전용 이름표 (데스크톱 벽은 침묵 — 커서 라벨이 말한다) */
-      a.appendChild(el('span', 'strip-caption', (w.title || '') + (w.year ? ' — ' + w.year : '')));
+      /* 격자는 목록이다 — 이름표가 늘 걸린다 (가로 벽 시절엔 커서가 말했다) */
+      var cap = el('span', 'work-caption');
+      cap.appendChild(el('span', 'work-title', w.title || ''));
+      var sub = [w.year, String(w.medium || '').split(/[,—–]/)[0].trim()].filter(Boolean).join(' · ');
+      if (sub) cap.appendChild(el('span', 'work-sub', sub));
+      a.appendChild(cap);
 
-      a.addEventListener('pointerenter', function (e) {
-        if (e.pointerType === 'touch') return;
-        var medium = String(w.medium || '').split(/[,—–]/)[0].trim();
-        showLabel(w.title + (w.year ? ' — ' + w.year : '') + (medium ? ' · ' + medium : ''));
-      });
-      a.addEventListener('pointerleave', hideLabel);
-      strip.appendChild(a);
+      grid.appendChild(a);
     });
-    v.appendChild(strip);
-
-    /* 벽 진행선 — 넘칠 때만 나타난다 */
-    var prog = el('div', 'strip-progress');
-    var thumb = document.createElement('i');
-    prog.appendChild(thumb);
-    v.appendChild(prog);
-    function updProgress() {
-      var max = v.scrollWidth - v.clientWidth;
-      prog.style.display = max > 4 ? '' : 'none';
-      if (max <= 0) return;
-      // thumb 폭 = 보이는 비율 — 벽이 얼마나 긴지 정직하게 말한다
-      thumb.style.width = Math.max(12, prog.clientWidth * v.clientWidth / v.scrollWidth) + 'px';
-      var track = prog.clientWidth - thumb.offsetWidth;
-      thumb.style.transform = 'translateX(' + (v.scrollLeft / max) * track + 'px)';
-    }
-    v.addEventListener('scroll', updProgress);
-    if (window.ResizeObserver) {
-      var ro = new ResizeObserver(updProgress);
-      ro.observe(v);       // 뷰가 드러나거나 크기가 바뀔 때
-      ro.observe(strip);   // 이미지가 로드되어 벽이 길어질 때
-    } else {
-      window.addEventListener('resize', updProgress);
-    }
-    updProgress();
-  }
-
-  /* wheel → horizontal */
-  stage.works.addEventListener('wheel', function (e) {
-    e.preventDefault();
-    stage.works.scrollLeft += (Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX);
-  }, { passive: false });
-
-  /* drag to scroll (suppress click after real drag) */
-  (function () {
-    var down = false, dragged = false, startX = 0, startLeft = 0;
-    var v = stage.works;
-    v.addEventListener('pointerdown', function (e) {
-      if (e.pointerType === 'touch') return; // 터치는 네이티브 스크롤
-      down = true; dragged = false;
-      startX = e.clientX; startLeft = v.scrollLeft;
-    });
-    window.addEventListener('pointermove', function (e) {
-      if (!down) return;
-      var dx = e.clientX - startX;
-      if (Math.abs(dx) > 6) {
-        dragged = true;
-        v.classList.add('dragging');
-        v.scrollLeft = startLeft - dx;
-      }
-    });
-    function endDrag() {
-      down = false;
-      v.classList.remove('dragging');
-    }
-    window.addEventListener('pointerup', endDrag);
-    window.addEventListener('pointercancel', endDrag);
-    v.addEventListener('click', function (e) {
-      if (dragged) { e.preventDefault(); e.stopPropagation(); dragged = false; }
-    }, true);
-  })();
-
-  /* ---------- cursor label ---------- */
-
-  var mouseX = 0, mouseY = 0, labelX = 0, labelY = 0, labelOn = false, rafId = null;
-
-  document.addEventListener('pointermove', function (e) {
-    mouseX = e.clientX; mouseY = e.clientY;
-    if (labelOn && rafId == null) tick();
-  });
-
-  function tick() {
-    labelX += (mouseX - labelX) * 0.22;
-    labelY += (mouseY - labelY) * 0.22;
-    cursorLabel.style.transform =
-      'translate(' + (labelX + 18) + 'px,' + (labelY + 22) + 'px)';
-    if (labelOn || Math.abs(mouseX - labelX) > 0.5 || Math.abs(mouseY - labelY) > 0.5) {
-      rafId = requestAnimationFrame(tick);
-    } else {
-      rafId = null;
-    }
-  }
-
-  function showLabel(text) {
-    cursorLabel.textContent = text;
-    labelX = mouseX; labelY = mouseY;
-    cursorLabel.classList.add('on');
-    labelOn = true;
-    if (rafId == null) tick();
-  }
-  function hideLabel() {
-    cursorLabel.classList.remove('on');
-    labelOn = false;
+    v.appendChild(grid);
   }
 
   /* ---------- research (studies) ---------- */
@@ -393,7 +302,7 @@
     var hasList = items.length > 0;
     var list = el('div', 'studies-list');
     if (!hasList) {
-      if (!DATA.studiesGif) list.appendChild(el('p', 'strip-empty', 'No research entries yet.'));
+      if (!DATA.studiesGif) list.appendChild(el('p', 'list-empty', 'No research entries yet.'));
     } else {
       /* 진행 중 → 제안 → 완료 순, 같은 묶음 안에서는 관리도구 순서 */
       items.sort(function (a, b) {
@@ -472,6 +381,13 @@
     var n = new Date();
     var today = n.getFullYear() + '-' + pad2(n.getMonth() + 1) + '-' + pad2(n.getDate());
     return k.slice(8) === '00' ? k.slice(0, 7) > today.slice(0, 7) : k > today;
+  }
+
+  /* 사진은 여러 장 — 옛 데이터의 image(한 장)도 그대로 읽는다 */
+  function newsImages(n) {
+    var arr = Array.isArray(n.images) ? n.images : [];
+    if (!arr.length && n.image) arr = [n.image];
+    return arr.filter(Boolean);
   }
 
   /* 관련 항목 — id 는 works·studies 를 통틀어 유일하다 (관리도구 uniqueId) */
@@ -617,13 +533,18 @@
       }
       row.appendChild(main);
 
-      if (n.image) {
-        var im = el('img', 'news-thumb');
-        im.src = n.image;
-        im.alt = '';
-        im.loading = 'lazy';
-        im.draggable = false;
-        row.appendChild(im);
+      var pics = newsImages(n);
+      if (pics.length) {
+        var thumbs = el('div', 'news-thumbs');
+        pics.forEach(function (src) {
+          var im = el('img', 'news-thumb');
+          im.src = src;
+          im.alt = '';
+          im.loading = 'lazy';
+          im.draggable = false;
+          thumbs.appendChild(im);
+        });
+        row.appendChild(thumbs);
       }
       return row;
     })();
@@ -833,7 +754,6 @@
   }
 
   function openDetail(item, kind) {
-    hideLabel();
     disposeViewers();
     overlayTitle.textContent = item.title || '';
     var koTitle = /[가-힣]/.test(item.title || '');
@@ -843,7 +763,25 @@
     overlayBody.textContent = '';
     overlayBody.scrollTop = 0;
 
-    (item.media || []).forEach(function (m) {
+    var media = item.media || [];
+    for (var mi = 0; mi < media.length;) {
+      var m = media[mi];
+      /* PDF 한 권에서 나온 페이지들 — 두 칸으로 왼·오, 왼·오 내려간다 */
+      if (m.doc && mediaType(m) === 'image') {
+        var pages = el('div', 'detail-pages');
+        var docName = m.doc;
+        while (mi < media.length && media[mi].doc === docName && mediaType(media[mi]) === 'image') {
+          var pim = document.createElement('img');
+          pim.src = media[mi].src;
+          pim.alt = (item.title || '') + ' — page ' + (pages.childNodes.length + 1);
+          pim.loading = 'lazy';
+          pages.appendChild(pim);
+          mi++;
+        }
+        overlayBody.appendChild(pages);
+        continue;
+      }
+      mi++;
       var wrap = el('div', 'detail-media');
       var t = mediaType(m);
 
@@ -877,7 +815,7 @@
 
       if (m.caption) wrap.appendChild(el('p', 'media-caption', m.caption));
       overlayBody.appendChild(wrap);
-    });
+    }
 
     /* 톰스톤 — 비어 있는 줄은 그리지 않는다 (가짜 없음) */
     var meta = el('div', 'detail-meta');
@@ -1079,7 +1017,7 @@
 
   /* ---------- boot ---------- */
 
-  buildStrip();
+  buildWorks();
   buildStudies();
   buildCv();
   buildAbout();
