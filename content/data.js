@@ -87,9 +87,274 @@ window.SITE_DATA = {
       "cover": "content/media/ethereal/ls-skull-0380.png",
       "media": [
         {
-          "type": "video",
-          "src": "content/media/ethereal/ethereal-1.mp4",
-          "caption": ""
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p01.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p02.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p03.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p04.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p05.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p06.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p07.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p08.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p09.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p10.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p11.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p12.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p13.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p14.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p15.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p16.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p17.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p18.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p19.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p20.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p21.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p22.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p23.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p24.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p25.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p26.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p27.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p28.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p29.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p30.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p31.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p32.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p33.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p34.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p35.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p36.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p37.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p38.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p39.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p40.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p41.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p42.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p43.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p44.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/ethereal/20241192-p45.jpg",
+          "caption": "",
+          "doc": "20241192"
         }
       ],
       "medium": "Single-channel video, real-time capture",
@@ -267,6 +532,276 @@ window.SITE_DATA = {
           "type": "image",
           "src": "content/media/apocalypse-env/20241192-page-36.png",
           "caption": ""
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p01.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p02.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p03.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p04.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p05.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p06.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p07.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p08.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p09.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p10.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p11.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p12.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p13.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p14.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p15.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p16.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p17.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p18.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p19.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p20.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p21.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p22.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p23.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p24.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p25.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p26.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p27.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p28.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p29.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p30.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p31.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p32.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p33.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p34.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p35.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p36.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p37.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p38.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p39.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p40.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p41.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p42.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p43.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p44.jpg",
+          "caption": "",
+          "doc": "20241192"
+        },
+        {
+          "type": "image",
+          "src": "content/media/apocalypse-env/20241192-p45.jpg",
+          "caption": "",
+          "doc": "20241192"
         }
       ],
       "medium": "Real-time environment, rendered still",
