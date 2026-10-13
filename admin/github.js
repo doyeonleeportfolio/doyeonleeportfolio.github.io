@@ -97,7 +97,14 @@
                 progress('파일 올리는 중 ' + (i + 1) + '/' + upPaths.length);
                 return file.arrayBuffer()
                   .then(function (buf) { return call('POST', '/git/blobs', { content: encodeBase64(buf), encoding: 'base64' }); })
-                  .then(function (b) { blobCache.set(file, b.sha); });
+                  .then(function (b) { blobCache.set(file, b.sha); }, function (e) {
+                    /* GitHub 은 40MiB 가 넘는 파일을 422 로 돌려보낸다 — 영어 원문 대신 할 일을 적는다 */
+                    if (e.status !== 422) throw e;
+                    var big = new Error('「' + p.split('/').pop() + '」 파일이 너무 커서 웹에서 올릴 수 없습니다 (한 파일 38MB까지). ' +
+                      '압축하거나 YouTube·Vimeo 링크로 넣거나, 내 컴퓨터의 관리도구.bat 으로 올려 주세요.');
+                    big.status = 422;
+                    throw big;
+                  });
               });
             });
             return chain;
@@ -124,15 +131,19 @@
             });
             return call('POST', '/git/trees', { base_tree: baseTree, tree: tree })
               .then(function (nt) { return call('POST', '/git/commits', { message: message, tree: nt.sha, parents: [headSha] }); })
-              .then(function (nc) { return call('PATCH', '/git/refs/heads/' + cfg.branch, { sha: nc.sha, force: false }); })
+              .then(function (nc) {
+                return call('PATCH', '/git/refs/heads/' + cfg.branch, { sha: nc.sha, force: false })
+                  .catch(function (e) { if (e.status === 422) e.notFastForward = true; throw e; });
+              })
               .then(function () {
                 dataSha = dataBlob.sha;
                 blobCache.clear();
               });
           })
           .catch(function (e) {
-            /* 그 사이 다른 커밋이 끼어들면(빨리감기 불가) 최신 커밋 위에서 한 번 더 */
-            if (e.status === 422 && canRetry) return attempt(false);
+            /* 그 사이 다른 커밋이 끼어들면(빨리감기 불가) 최신 커밋 위에서 한 번 더.
+               같은 422 라도 "파일이 너무 큼" 은 다시 해도 똑같다 — 올리기를 한 번 더 반복하지 않는다 */
+            if (e.notFastForward && canRetry) return attempt(false);
             throw e;
           });
       }

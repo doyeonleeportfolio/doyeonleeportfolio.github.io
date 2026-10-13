@@ -87,6 +87,11 @@ window.SITE_DATA = {
       "cover": "content/media/ethereal/ls-skull-0380.png",
       "media": [
         {
+          "type": "video",
+          "src": "content/media/ethereal/ethereal-1.mp4",
+          "caption": ""
+        },
+        {
           "type": "embed",
           "src": "https://youtu.be/cLoDJxfpD8c?si=qk3Ml1rQYawKUs9W",
           "caption": ""

@@ -21,7 +21,11 @@
   var TOKEN_URL = 'https://github.com/settings/tokens/new?scopes=public_repo&description=' +
     encodeURIComponent('포트폴리오 관리도구 — ' + GH.repo);
   var LOCAL = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
-  var MAX_WEB_UPLOAD = 50 * 1024 * 1024;   // ponytail: GitHub 이 50MB 넘는 파일에 경고한다 — 더 큰 영상은 압축하거나 로컬 관리도구(git push)로
+  /* 웹에서 올릴 수 있는 한 파일의 크기.
+     GitHub blobs API 는 파일을 base64(×1.33)로 받는데, 40MiB(=base64 53MB)까지만 받고
+     41MiB 부터 422 "input was too large to process" 를 돌려준다 (2026-10-13 측정).
+     문서의 "100MB 까지" 는 git push 에만 해당한다. 여유 2MB 를 두고 38MB. */
+  var MAX_WEB_UPLOAD = 38 * 1024 * 1024;
   var store = null;          // GitHubStore — 웹에서 로그인한 뒤에만 생긴다
   var pendingUploads = {};   // 웹: 저장 전까지 브라우저가 들고 있는 새 파일 { 경로: File }
   var pendingDeletes = {};   // 웹: 저장할 때 함께 지울 경로 (파일 또는 폴더)
@@ -194,7 +198,9 @@
   function apiUpload(file, destRel) {
     if (store) {
       if (file.size > MAX_WEB_UPLOAD) {
-        return Promise.reject(new Error('50MB가 넘는 파일은 웹에서 올릴 수 없습니다 — 영상을 압축하거나 YouTube·Vimeo 링크로 넣어 주세요'));
+        return Promise.reject(new Error(
+          '「' + file.name + '」 ' + Math.round(file.size / 1048576) + 'MB — 웹 관리도구는 38MB까지만 올릴 수 있습니다.\n' +
+          '① 영상을 압축해서 다시 올리거나 ② YouTube·Vimeo 링크로 넣거나 ③ 내 컴퓨터의 관리도구.bat 으로 올려 주세요 (100MB까지).'));
       }
       pendingUploads[destRel] = file;
       delete pendingDeletes[destRel];
@@ -464,7 +470,13 @@
         uploadInto(folder, files, function (err, paths) {
           b.classList.remove('busy');
           b.textContent = labelText;
-          if (err) { toast('업로드 실패: ' + err.message); }
+          if (err) {
+            /* 토스트는 금방 사라진다 — 못 올린 파일을 모르고 저장해 버리지 않게 상태줄에도 남긴다 */
+            toast('업로드 실패: ' + err.message.split('\n')[0]);
+            saveStatus.textContent = '업로드 실패 — ' + err.message.replace(/\n/g, ' ');
+            saveStatus.classList.add('dirty');
+            window.alert('올리지 못한 파일이 있습니다.\n\n' + err.message);
+          }
           if (paths.length) onDone(paths);
         });
       });
@@ -945,7 +957,7 @@
     mwrap.appendChild(urow);
 
     main.appendChild(field('미디어 (위에서부터 순서대로 표시)', mwrap,
-      '이미지: jpg/png/webp · 영상: mp4 권장 (50MB 이하) · 3D: .glb 권장 (Blender에서 내보내기 → glTF 2.0).\n첫 번째 미디어가 영상이면 첫 화면에서 마우스를 올렸을 때 자동 재생됩니다 — 구간은 아래에서 정합니다.\nPDF 를 넣으면 모든 페이지가 이미지로 바뀌어 상세 화면에 2열(왼·오)로 쭉 펼쳐집니다. 페이지가 많으면 조금 걸리니 변환이 끝날 때까지 이 탭을 열어 두세요.'));
+      '이미지: jpg/png/webp · 영상: mp4 권장 (웹에서는 38MB 이하 — 더 큰 영상은 압축하거나 관리도구.bat 으로) · 3D: .glb 권장 (Blender에서 내보내기 → glTF 2.0).\n첫 번째 미디어가 영상이면 첫 화면에서 마우스를 올렸을 때 자동 재생됩니다 — 구간은 아래에서 정합니다.\nPDF 를 넣으면 모든 페이지가 이미지로 바뀌어 상세 화면에 2열(왼·오)로 쭉 펼쳐집니다. 페이지가 많으면 조금 걸리니 변환이 끝날 때까지 이 탭을 열어 두세요.'));
 
     if (isWork) renderHoverControls(item);
 
