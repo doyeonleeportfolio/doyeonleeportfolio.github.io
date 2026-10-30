@@ -1012,6 +1012,19 @@ window.SITE_DATA = {
       "href": "",
       "related": [],
       "images": []
+    },
+    {
+      "id": "barrierfree-media-art-exhibition",
+      "date": "2026-10",
+      "kind": "service",
+      "title": "BarrierFree Media art Exhibition",
+      "venue": "",
+      "note": "",
+      "href": "",
+      "images": [
+        "content/media/barrierfree-media-art-exhibition/스크린샷-2026-10-31-000551.png"
+      ],
+      "related": []
     }
   ],
   "studiesGif": "content/media/studies/giphy.gif"
