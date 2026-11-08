@@ -1025,6 +1025,19 @@ window.SITE_DATA = {
         "content/media/barrierfree-media-art-exhibition/스크린샷-2026-10-31-000551.png"
       ],
       "related": []
+    },
+    {
+      "id": "time-of-materiality-a-study-on-representing-the-materiality-of-joseon-era-tteoljam-using-generative-artificial-intelligence",
+      "date": "2026-09",
+      "kind": "publication",
+      "title": "Time of Materiality: A Study on Representing the Materiality of Joseon-Era Tteoljam Using Generative Artificial Intelligence",
+      "venue": "한국컴퓨터게임학회",
+      "note": "Young-Ho Kim,Ye-Bon Park,Do-Yeon Lee,Bo-A Rhee. (2026). Time of Materiality: A Study on Representing the Materiality of Joseon-Era Tteoljam Using Generative Artificial Intelligence. 한국컴퓨터게임학회논문지, 39(9), 14-22. 10.22819/kscg.2026.39.9.002",
+      "href": "",
+      "images": [],
+      "related": [
+        "time-of-materiality"
+      ]
     }
   ],
   "studiesGif": "content/media/studies/giphy.gif"
