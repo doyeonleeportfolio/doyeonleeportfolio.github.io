@@ -1131,6 +1131,7 @@
   /* ----- News — 수상 · 학회 · 소식 ----- */
 
   var NEWS_KINDS = [
+    ['publication', '논문 (Publication)'],
     ['award', '수상 (Award)'],
     ['scholarship', '장학 (Scholarship)'],
     ['conference', '학회 · 참가 (Conference)'],
@@ -1155,9 +1156,9 @@
   }
 
   function renderNews() {
-    main.appendChild(el('h2', 'section-title', 'CV — 수상 · 장학 · 학회 · 활동'));
+    main.appendChild(el('h2', 'section-title', 'CV — 논문 · 수상 · 장학 · 학회 · 활동'));
     main.appendChild(el('p', 'field-hint',
-      '사이트의 CV 페이지에 종류별(Awards · Scholarships · Conferences · Service …)로 묶여 표시되고, 묶음 안에서는 최신순입니다. 아직 오지 않은 날짜는 Upcoming 으로 표시됩니다. CV 페이지 맨 위의 학력은 「기본 정보」의 CV 칸에서 씁니다.'));
+      '사이트의 CV 페이지에 모든 종류가 한 목록으로, 최신순·연도별(2026, 2025 …)로 표시됩니다. 종류(Publication · Award …)는 각 줄 제목 아래에 붙습니다. 아직 오지 않은 날짜는 Upcoming 으로 표시됩니다. CV 페이지 맨 위의 학력은 「기본 정보」의 CV 칸에서 씁니다.'));
 
     var arr = DATA.news;
     var list = el('div', 'item-list');
@@ -1225,16 +1226,16 @@
       '사이트에는 제목 아래 영문으로 표시됩니다 (Award · Conference …).'));
 
     main.appendChild(field('제목 (영문 권장)', input(item.title, function (v) { item.title = v; }, 'Student Volunteer, SIGGRAPH Asia 2026'),
-      '무엇을 했는지 한 줄로. 수상이면 상 이름, 학회면 맡은 역할과 학회 이름.'));
+      '무엇을 했는지 한 줄로. 수상이면 상 이름, 학회면 맡은 역할과 학회 이름, 논문이면 논문 제목.'));
 
     main.appendChild(field('주최 · 장소 (선택)', input(item.venue, function (v) { item.venue = v; }, 'ACM SIGGRAPH, Tokyo'),
-      '주최 기관과 도시. 종류 옆에 한 줄로 붙습니다.'));
+      '주최 기관과 도시. 종류 옆에 한 줄로 붙습니다. 논문이면 학회·저널 이름과 상태 (예: Under review · CHI 2027 / Accepted · HCI Korea 2027).'));
 
     main.appendChild(field('한 줄 설명 (선택)', input(item.note, function (v) { item.note = v; }, 'Selected as a student volunteer for the conference.'),
-      '필요할 때만 씁니다. 비워 두면 줄이 나오지 않습니다.'));
+      '필요할 때만 씁니다. 비워 두면 줄이 나오지 않습니다. 논문이면 저자 (예: Doyeon Lee, Co-author Name).'));
 
     main.appendChild(field('링크 (선택)', input(item.href, function (v) { item.href = v.trim(); }, 'https://…'),
-      '학회·공고·기사 주소. 넣으면 제목이 링크가 되고 옆에 ↗ 가 붙습니다.'));
+      '학회·공고·기사 주소. 넣으면 제목이 링크가 되고 옆에 ↗ 가 붙습니다. 논문이면 DOI 나 PDF 주소.'));
 
     /* 사진 — 여러 장 (상장, 현장 사진, 기사 캡처) */
     var iwrap = el('div');
@@ -1291,7 +1292,7 @@
     });
     if (!pool.length) relWrap.appendChild(el('p', 'field-hint', '등록된 작업·연구가 없습니다.'));
     main.appendChild(field('관련 작품 · 연구 (선택)', relWrap,
-      '수상작이나 학회에 가져간 작업을 고르면, 이 소식 아래에 그 작품의 작은 미리보기가 걸리고 눌러서 상세 화면으로 갈 수 있습니다.'));
+      '수상작이나 학회에 가져간 작업을 고르면, 이 소식 아래에 그 작품의 작은 미리보기가 걸리고 눌러서 상세 화면으로 갈 수 있습니다. 논문이면 그 연구를 고르세요 — 연구 상세 화면에 Publications 줄이 생깁니다.'));
   }
 
   /* ----- 배포 (내 컴퓨터에서 연 관리도구 전용 — 웹에서는 저장이 곧 반영) ----- */

@@ -348,6 +348,7 @@
   /* ---------- news — 수상 · 학회 · 소식 (날짜순 활동 기록) ---------- */
 
   var NEWS_KINDS = {
+    publication: 'Publication',
     award: 'Award',
     scholarship: 'Scholarship',
     conference: 'Conference',
@@ -399,19 +400,6 @@
     return null;
   }
 
-  /* CV 페이지의 묶음 순서 — 성과가 먼저, 활동이 뒤 */
-  var CV_GROUPS = [
-    ['award', 'Awards'],
-    ['scholarship', 'Scholarships'],
-    ['conference', 'Conferences'],
-    ['talk', 'Talks'],
-    ['exhibition', 'Exhibitions'],
-    ['project', 'Projects'],
-    ['press', 'Press'],
-    ['residency', 'Residencies'],
-    ['service', 'Service']
-  ];
-
   function byNewest(a, b) {
     var ka = newsKey(a.date), kb = newsKey(b.date);
     return ka < kb ? 1 : ka > kb ? -1 : 0;
@@ -461,20 +449,16 @@
     var list = el('div', 'news-list');
     if (lines.length) list.appendChild(cvBlock(lines));
 
-    var placed = {};
-    CV_GROUPS.forEach(function (g) {
-      var group = items.filter(function (n) { return String(n.kind || '').toLowerCase() === g[0]; });
-      if (!group.length) return;
-      group.forEach(function (n) { placed[n.id] = true; });
-      list.appendChild(el('h2', 'about-heading', g[1]));
-      group.sort(byNewest).forEach(function (n) { list.appendChild(newsRow(n)); });
+    /* 한 줄기 타임라인 — 최신순, 연도마다 소제목. 종류는 각 줄에 붙는다 */
+    var year = null;
+    items.sort(byNewest).forEach(function (n) {
+      var y = newsKey(n.date).slice(0, 4);
+      if (y !== year) {
+        year = y;
+        list.appendChild(el('h2', 'about-heading', y === '0000' ? 'Undated' : y));
+      }
+      list.appendChild(newsRow(n));
     });
-    /* 목록에 없는 종류도 버리지 않는다 */
-    var rest = items.filter(function (n) { return !placed[n.id]; });
-    if (rest.length) {
-      list.appendChild(el('h2', 'about-heading', 'Other'));
-      rest.sort(byNewest).forEach(function (n) { list.appendChild(newsRow(n)); });
-    }
 
     if (ab.cvPdf) {
       var pdf = el('a', 'about-cvlink', 'Download CV (PDF)');
@@ -486,7 +470,7 @@
     v.appendChild(list);
   }
 
-  /* 한 줄 — 날짜 | 제목·장소·설명·관련작품 | 사진. 종류는 묶음 제목이 이미 말한다 */
+  /* 한 줄 — 날짜 | 제목·종류·장소·설명·관련작품 | 사진 */
   function newsRow(n) {
     return (function () {
       /* 줄 전체를 링크로 만들지 않는다 — 안에 관련 작품 링크가 들어가기 때문 */
@@ -505,7 +489,7 @@
       } else {
         main.appendChild(el('div', 'news-title', n.title || ''));
       }
-      var sub = [n.venue].filter(Boolean);
+      var sub = [NEWS_KINDS[String(n.kind || '').toLowerCase()], n.venue].filter(Boolean);
       if (isUpcoming(n.date)) sub.push('Upcoming');
       if (sub.length) main.appendChild(el('div', 'news-sub', sub.join(' · ')));
       if (n.note) main.appendChild(el('p', 'news-note', n.note));
@@ -741,6 +725,7 @@
       if (i) frag.appendChild(document.createTextNode(' · '));
       var a = el('a', null, p.label);
       a.href = p.href;
+      if (/^https?:/i.test(p.href)) { a.target = '_blank'; a.rel = 'noopener'; }
       frag.appendChild(a);
     });
     return frag;
@@ -829,6 +814,15 @@
       if (rel.length) {
         rows.push(metaRow('Works', linkList(rel.map(function (w) {
           return { label: w.title + (w.year ? ' (' + w.year + ')' : ''), href: '#w/' + encodeURIComponent(w.id) };
+        }))));
+      }
+      /* 이 연구에서 나온 논문 — CV 의 Publication 항목이 related 로 이 연구를 가리킨다 */
+      var pubs = (DATA.news || []).filter(function (n) {
+        return String(n.kind || '').toLowerCase() === 'publication' && listOf(n.related).indexOf(item.id) >= 0;
+      }).sort(byNewest);
+      if (pubs.length) {
+        rows.push(metaRow('Publications', linkList(pubs.map(function (n) {
+          return { label: [n.title, n.venue].filter(Boolean).join(' — '), href: n.href || '#cv' };
         }))));
       }
     } else {
