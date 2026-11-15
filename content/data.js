@@ -19,7 +19,7 @@ window.SITE_DATA = {
       "Department of VR Convergence Engineering"
     ],
     "cvPdf": "",
-    "image": "content/media/about/profile.jpg"
+    "image": "content/media/about/2.jpg"
   },
   "contact": [
     {
@@ -884,7 +884,7 @@ window.SITE_DATA = {
           "caption": "Episode-scale reallocation speed vs. action-scene horizontal range"
         }
       ],
-      "description": "This study extends visual-balance measurement from still images to long-form video. For every frame of 120 tokusatsu episodes — six series spanning Japan's Showa, Heisei and Reiwa eras — it computes a darkness-weighted barycenter from luma values and tracks how that point moves at two temporal scales: across full episodes, and within annotated action scenes.\n\nThe two franchises turn out to differ by time scale rather than by overall dynamism. Super Sentai reallocates the barycenter faster across full episodes; Kamen Rider covers a wider horizontal range within its main action scenes. The same metric yields opposite readings depending on the unit of analysis — which is itself the finding. Manuscript in preparation.",
+      "description": "Objective & Method: This study analyzed the temporal movement of the screen's visual barycenter (darkness-weighted center of visual mass) across 120 episodes from two Japanese tokusatsu franchises: solo-hero Kamen Rider and team-based Super Sentai (three series each, episodes 1–20).\n\nKey Findings: Across full episodes, Super Sentai reallocated its visual barycenter significantly faster, whereas within main-action scenes, Kamen Rider exhibited a wider horizontal range and greater variability.\n\nConclusion: Team-based Super Sentai is characterized by rapid episode-wide visual shifts, while solo-hero Kamen Rider emphasizes dynamic horizontal movement within its action sequences.",
       "relatedWorks": [],
       "links": []
     }
