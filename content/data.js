@@ -34,7 +34,7 @@ window.SITE_DATA = {
     },
     {
       "label": "Open to",
-      "value": "Commissions · Collaborations · Research ·Internships ",
+      "value": "Commissions · Collaborations · Research · Internships ",
       "href": ""
     },
     {
@@ -877,16 +877,33 @@ window.SITE_DATA = {
           "type": "image",
           "src": "content/media/screen-composition-in-motion/screenshot-2026-09-02-234940-2.png",
           "caption": ""
-        },
-        {
-          "type": "image",
-          "src": "content/media/screen-composition-in-motion/fig-dual-scale.png",
-          "caption": "Episode-scale reallocation speed vs. action-scene horizontal range"
         }
       ],
       "description": "Objective & Method: This study analyzed the temporal movement of the screen's visual barycenter (darkness-weighted center of visual mass) across 120 episodes from two Japanese tokusatsu franchises: solo-hero Kamen Rider and team-based Super Sentai (three series each, episodes 1–20).\n\nKey Findings: Across full episodes, Super Sentai reallocated its visual barycenter significantly faster, whereas within main-action scenes, Kamen Rider exhibited a wider horizontal range and greater variability.\n\nConclusion: Team-based Super Sentai is characterized by rapid episode-wide visual shifts, while solo-hero Kamen Rider emphasizes dynamic horizontal movement within its action sequences.",
       "relatedWorks": [],
       "links": []
+    },
+    {
+      "id": "visual-grammar-analysis-of-ashanti-kente",
+      "title": "Visual Grammar Analysis of Ashanti Kente",
+      "year": "2026",
+      "cover": "content/media/visual-grammar-analysis-of-ashanti-kente/as19-tribalgh-5877034123416.jpg",
+      "media": [],
+      "description": "",
+      "links": [],
+      "status": "ongoing",
+      "keywords": [
+        "Kente",
+        "traditional textiles",
+        "visual grammar",
+        "permutation test"
+      ],
+      "summary": "This study quantitatively analyzed 35 Ashanti Kente cloths to determine whether weavers' planning resides in block proportions or sequence. Results show that proportions alone reconstruct cloth strips to a 0.65 reproduction index, while shuffling sequences disrupts periodic repetitions and shared transition rules across cloths. Ultimately, Kente planning operates across both structural layers: proportion and sequence.",
+      "relatedWorks": [],
+      "themes": [
+        "heritage",
+        "data"
+      ]
     }
   ],
   "news": [
