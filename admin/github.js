@@ -1,6 +1,6 @@
 /* ==========================================================
    GitHub 저장소 백엔드
-   웹(GitHub Pages)에서 연 관리도구는 로컬 서버 대신 이 저장소에
+   관리도구는 이 저장소에
    직접 커밋한다. 저장 한 번 = 커밋 한 번 = 사이트 배포 한 번.
    데이터·새 파일·삭제가 한 커밋에 같이 들어가서, 사이트가
    없는 파일을 가리키는 중간 상태가 생기지 않는다.
@@ -84,7 +84,7 @@
           .then(function (t) {
             t.tree.forEach(function (e) { if (e.type === 'blob') files[e.path] = e.sha; });
             if (!force && dataSha && files[DATA_PATH] !== dataSha) {
-              var err = new Error('다른 곳에서 먼저 저장된 내용이 있습니다');
+              var err = new Error('Someone saved first from another device or tab');
               err.code = 'conflict';
               throw err;
             }
@@ -94,14 +94,14 @@
               chain = chain.then(function () {
                 var file = uploads[p];
                 if (blobCache.has(file)) return;
-                progress('파일 올리는 중 ' + (i + 1) + '/' + upPaths.length);
+                progress('Uploading file ' + (i + 1) + ' / ' + upPaths.length + '…');
                 return file.arrayBuffer()
                   .then(function (buf) { return call('POST', '/git/blobs', { content: encodeBase64(buf), encoding: 'base64' }); })
                   .then(function (b) { blobCache.set(file, b.sha); }, function (e) {
                     /* GitHub 은 40MiB 가 넘는 파일을 422 로 돌려보낸다 — 영어 원문 대신 할 일을 적는다 */
                     if (e.status !== 422) throw e;
-                    var big = new Error('「' + p.split('/').pop() + '」 파일이 너무 커서 웹에서 올릴 수 없습니다 (한 파일 38MB까지). ' +
-                      '압축하거나 YouTube·Vimeo 링크로 넣거나, 내 컴퓨터의 관리도구.bat 으로 올려 주세요.');
+                    var big = new Error('"' + p.split('/').pop() + '" is too large to upload (38 MB per file). ' +
+                      'Compress it, or add it as a YouTube / Vimeo link.');
                     big.status = 422;
                     throw big;
                   });
@@ -110,7 +110,7 @@
             return chain;
           })
           .then(function () {
-            progress('저장 중…');
+            progress('Saving…');
             return call('POST', '/git/blobs', { content: dataText, encoding: 'utf-8' });
           })
           .then(function (dataBlob) {

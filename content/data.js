@@ -1022,7 +1022,7 @@ window.SITE_DATA = {
       "note": "",
       "href": "",
       "images": [
-        "content/media/barrierfree-media-art-exhibition/스크린샷-2026-10-31-000551.png"
+        "content/media/barrierfree-media-art-exhibition/screenshot-2026-10-31-000551.png"
       ],
       "related": []
     },

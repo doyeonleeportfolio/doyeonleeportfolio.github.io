@@ -1,41 +1,38 @@
 /* ==========================================================
-   관리도구 — 작업물/스터디/기본정보 편집기
-   내 컴퓨터(관리도구.bat)에서는 로컬 서버(tools/serve.ps1) API로,
-   웹(GitHub Pages)에서는 GitHub 저장소에 직접 저장합니다 (github.js).
+   관리도구 — 사이트와 같은 틀(Works · Research · CV · About · Contact)로
+   content/data.js 를 고친다. 저장 = GitHub 저장소에 커밋 하나 (github.js)
+   = 1분쯤 뒤 사이트 반영. 화면 글은 사이트처럼 전부 영문.
    ========================================================== */
 (function () {
   'use strict';
 
   var DATA = null;
   var dirty = false;
-  var view = 'works';        // basic | works | studies | deploy
-  var editing = null;        // { list: 'works'|'studies', id: string }
-  var uploading = 0;
-  var deployTimer = null;    // 배포 화면의 git 상태 자동 새로고침
+  var view = 'works';        // home | works | studies | cv | about | contact — 사이트 해시와 같은 이름
+  var editing = null;        // { list: 'works'|'studies'|'news', id: string }
 
-  /* 웹(GitHub Pages)에서 열리면 로컬 서버 대신 이 저장소에 직접 커밋한다 */
   var GH = { owner: 'doyeonleeportfolio', repo: 'doyeonleeportfolio.github.io', branch: 'main' };
-  var SITE_URL = 'https://doyeonleeportfolio.github.io';
   /* 권한이 미리 채워진 토큰 만들기 링크 — 고를 게 적어야 틀리지 않는다.
      public_repo = 공개 저장소 쓰기 (이 사이트 저장소가 공개라 이것만으로 충분) */
   var TOKEN_URL = 'https://github.com/settings/tokens/new?scopes=public_repo&description=' +
-    encodeURIComponent('포트폴리오 관리도구 — ' + GH.repo);
-  var LOCAL = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+    encodeURIComponent('Portfolio admin — ' + GH.repo);
   /* 웹에서 올릴 수 있는 한 파일의 크기.
      GitHub blobs API 는 파일을 base64(×1.33)로 받는데, 40MiB(=base64 53MB)까지만 받고
      41MiB 부터 422 "input was too large to process" 를 돌려준다 (2026-10-13 측정).
      문서의 "100MB 까지" 는 git push 에만 해당한다. 여유 2MB 를 두고 38MB. */
   var MAX_WEB_UPLOAD = 38 * 1024 * 1024;
-  var store = null;          // GitHubStore — 웹에서 로그인한 뒤에만 생긴다
-  var pendingUploads = {};   // 웹: 저장 전까지 브라우저가 들고 있는 새 파일 { 경로: File }
-  var pendingDeletes = {};   // 웹: 저장할 때 함께 지울 경로 (파일 또는 폴더)
+  var store = null;          // GitHubStore — 로그인한 뒤에만 생긴다
+  var pendingUploads = {};   // 저장 전까지 브라우저가 들고 있는 새 파일 { 경로: File }
+  var pendingDeletes = {};   // 저장할 때 함께 지울 경로 (파일 또는 폴더)
   var previewUrls = {};      // 아직 사이트에 없는 파일의 미리보기 주소 (blob:)
 
   var main = document.getElementById('main');
   var saveBtn = document.getElementById('saveBtn');
   var saveStatus = document.getElementById('saveStatus');
-  var banner = document.getElementById('offlineBanner');
-  var navBtns = Array.prototype.slice.call(document.querySelectorAll('.side-link'));
+  var banner = document.getElementById('banner');
+  var siteNameBtn = document.getElementById('siteName');
+  var siteLink = document.getElementById('siteLink');
+  var navBtns = Array.prototype.slice.call(document.querySelectorAll('[data-view]'));
 
   var toastEl = document.createElement('div');
   toastEl.className = 'toast';
@@ -106,6 +103,10 @@
     return ta;
   }
 
+  function lines(v) {
+    return v.split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
+  }
+
   /* "a, b, c" → ['a','b','c'] */
   function splitList(v) {
     return String(v || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
@@ -114,7 +115,7 @@
     return Array.isArray(arr) ? arr.join(', ') : String(arr || '');
   }
 
-  /* 홈 문양의 주제 키 — js/home.js MOTIFS 와 같은 어휘 */
+  /* 홈 문양의 주제 키 — js/home.js MOTIFS · js/app.js THEME_LABELS 와 같은 어휘 */
   var THEMES = [
     ['heritage', 'Digital Heritage'],
     ['media', 'Interactive Media Art'],
@@ -122,6 +123,9 @@
     ['data', 'Data Analysis'],
     ['moving', 'Moving Image']
   ];
+
+  /* js/app.js STATUS_LABELS 와 같은 이름 */
+  var STATUS = [['ongoing', 'Ongoing'], ['proposed', 'Proposed'], ['completed', 'Completed']];
 
   function slugBase(s) {
     return String(s || '').toLowerCase()
@@ -138,13 +142,11 @@
     return id;
   }
 
+  /* 파일 이름은 영문·숫자만 — 같은 이름이 되면 uploadInto 가 -2, -3 … 을 붙인다 */
   function fileSlug(name) {
     var dot = name.lastIndexOf('.');
     var ext = dot >= 0 ? name.slice(dot).toLowerCase() : '';
-    /* 한글은 보존한다 — 전부 지우면 여러 파일이 같은 이름(file.glb)으로 덮어써진다 */
-    var base = String(dot >= 0 ? name.slice(0, dot) : name).toLowerCase()
-      .replace(/[^0-9a-z가-힣]+/g, '-')
-      .replace(/^-+|-+$/g, '') || 'file';
+    var base = slugBase(dot >= 0 ? name.slice(0, dot) : name) || 'file';
     return base + ext;
   }
 
@@ -158,7 +160,6 @@
     if (DATA.about && DATA.about.image) used[DATA.about.image] = true;
     if (DATA.about && DATA.about.cvPdf) used[DATA.about.cvPdf] = true;
     (DATA.news || []).forEach(function (n) {
-      if (n.image) used[n.image] = true;   // 옛 데이터 (한 장)
       (n.images || []).forEach(function (src) { if (src) used[src] = true; });
     });
     if (DATA.studiesGif) used[DATA.studiesGif] = true;
@@ -176,94 +177,54 @@
 
   function setDirty() {
     dirty = true;
-    saveStatus.textContent = '저장되지 않은 변경사항이 있습니다';
+    saveStatus.textContent = 'Unsaved changes';
     saveStatus.classList.add('dirty');
   }
 
   window.addEventListener('beforeunload', function (e) {
-    if (dirty || uploading > 0) { e.preventDefault(); e.returnValue = ''; }
+    if (dirty) { e.preventDefault(); e.returnValue = ''; }
   });
 
-  /* ---------- API ---------- */
-
-  function api(path, opts) {
-    return fetch(path, opts).then(function (r) { return r.json(); });
-  }
+  /* ---------- 파일 · 저장 ---------- */
 
   /* 관리도구 안의 미리보기 주소 — 방금 올려서 아직 사이트에 없는 파일은 브라우저 사본으로 */
   function mediaUrl(src) {
     return previewUrls[src] || '/' + src;
   }
 
-  function apiUpload(file, destRel) {
-    if (store) {
-      if (file.size > MAX_WEB_UPLOAD) {
-        return Promise.reject(new Error(
-          '「' + file.name + '」 ' + Math.round(file.size / 1048576) + 'MB — 웹 관리도구는 38MB까지만 올릴 수 있습니다.\n' +
-          '① 영상을 압축해서 다시 올리거나 ② YouTube·Vimeo 링크로 넣거나 ③ 내 컴퓨터의 관리도구.bat 으로 올려 주세요 (100MB까지).'));
-      }
-      pendingUploads[destRel] = file;
-      delete pendingDeletes[destRel];
-      if (previewUrls[destRel]) URL.revokeObjectURL(previewUrls[destRel]);
-      previewUrls[destRel] = URL.createObjectURL(file);
-      setDirty();
-      return Promise.resolve({ ok: true, path: destRel, size: file.size });
+  /* 새 파일은 저장할 때 데이터와 같은 커밋으로 올라간다 — 그때까지 브라우저에 둔다 */
+  function stageUpload(file, destRel) {
+    if (file.size > MAX_WEB_UPLOAD) {
+      return Promise.reject(new Error(
+        '"' + file.name + '" is ' + Math.round(file.size / 1048576) + ' MB — the admin can upload up to 38 MB per file.\n' +
+        'Compress the video and add it again, or add it as a YouTube / Vimeo link.'));
     }
-    uploading++;
-    return fetch('/api/upload?path=' + encodeURIComponent(destRel), { method: 'POST', body: file })
-      .then(function (r) { return r.json(); })
-      .then(function (j) {
-        uploading--;
-        if (!j.ok) throw new Error(j.error || 'upload fail');
-        return j;
-      })
-      .catch(function (e) { uploading--; throw e; });
+    pendingUploads[destRel] = file;
+    delete pendingDeletes[destRel];
+    if (previewUrls[destRel]) URL.revokeObjectURL(previewUrls[destRel]);
+    previewUrls[destRel] = URL.createObjectURL(file);
+    setDirty();
+    return Promise.resolve();
   }
 
-  function apiDelete(destRel) {
-    if (store) {
-      pendingDeletes[destRel] = true;
-      Object.keys(pendingUploads).forEach(function (p) {
-        if (p === destRel || p.indexOf(destRel + '/') === 0) delete pendingUploads[p];
-      });
-      setDirty();
-      return Promise.resolve();
-    }
-    return api('/api/delete?path=' + encodeURIComponent(destRel), { method: 'POST' }).catch(function () {});
+  function stageDelete(destRel) {
+    pendingDeletes[destRel] = true;
+    Object.keys(pendingUploads).forEach(function (p) {
+      if (p === destRel || p.indexOf(destRel + '/') === 0) delete pendingUploads[p];
+    });
+    setDirty();
   }
 
-  function save() {
-    if (!DATA) return;
-    if (store) { saveWeb(false); return; }
-    saveBtn.disabled = true;
-    api('/api/save-data', { method: 'POST', body: JSON.stringify(DATA, null, 2) })
-      .then(function (j) {
-        saveBtn.disabled = false;
-        if (j.ok) {
-          dirty = false;
-          saveStatus.classList.remove('dirty');
-          var t = new Date();
-          saveStatus.textContent = '저장됨 ' + t.toTimeString().slice(0, 8);
-          toast('저장되었습니다 — 미리보기 탭을 새로고침하면 반영됩니다');
-        } else {
-          toast('저장 실패: ' + (j.error || '알 수 없는 오류'));
-        }
-      })
-      .catch(function () {
-        saveBtn.disabled = false;
-        toast('저장 실패 — 서버가 실행 중인지 확인해 주세요');
-      });
-  }
-
-  /* 웹: 데이터 + 새 파일 + 삭제를 커밋 하나로. 저장이 곧 사이트 반영이다 */
-  function saveWeb(force) {
+  /* 데이터 + 새 파일 + 삭제를 커밋 하나로. 저장이 곧 사이트 반영이다 */
+  function save(force) {
+    if (!DATA || !store) return;
     saveBtn.disabled = true;
     var text = 'window.SITE_DATA = ' + JSON.stringify(DATA, null, 2) + ';\n';
     var ups = {};
     Object.keys(pendingUploads).forEach(function (p) { ups[p] = pendingUploads[p]; });
     var dels = Object.keys(pendingDeletes);
-    var msg = '관리도구에서 저장 — ' + new Date().toLocaleString('sv-SE').slice(0, 16);
-    saveStatus.textContent = '저장 중…';
+    var msg = 'Admin save — ' + new Date().toLocaleString('sv-SE').slice(0, 16);
+    saveStatus.textContent = 'Saving…';
     store.commit(text, ups, dels, msg, force, function (m) { saveStatus.textContent = m; })
       .then(function () {
         saveBtn.disabled = false;
@@ -271,29 +232,29 @@
         dels.forEach(function (p) { delete pendingDeletes[p]; });
         dirty = false;
         saveStatus.classList.remove('dirty');
-        saveStatus.textContent = '저장됨 · 사이트 반영 중…';
-        toast('저장되었습니다 — 1분쯤 뒤 사이트에 반영됩니다');
+        saveStatus.textContent = 'Saved · publishing…';
+        toast('Saved — the site updates in about a minute');
         watchLive(text, function (ok) {
           if (dirty) return;   // 그 사이 또 고쳤으면 상태줄은 그쪽 몫
           saveStatus.textContent = ok
-            ? '사이트에 반영됨 ✓ ' + new Date().toTimeString().slice(0, 5)
-            : '저장됨 · 반영 확인이 늦어집니다 — 사이트를 새로고침해 보세요';
+            ? 'Live on the site ✓ ' + new Date().toTimeString().slice(0, 5)
+            : 'Saved · the site is slow to update — try refreshing it';
         });
       })
       .catch(function (e) {
         saveBtn.disabled = false;
         setDirty();
         if (e.code === 'conflict') {
-          if (window.confirm('다른 곳(다른 기기나 탭)에서 먼저 저장된 내용이 있습니다.\n\n' +
-              '지금 이 화면의 내용으로 덮어쓸까요?\n' +
-              '취소하면 아무것도 바뀌지 않습니다 — 새로고침하면 최신 내용을 불러옵니다.')) {
-            saveWeb(true);
+          if (window.confirm('Someone saved from another device or tab first.\n\n' +
+              'Overwrite it with what is on this screen?\n' +
+              'Cancel changes nothing — reload the page to get the latest version.')) {
+            save(true);
           }
           return;
         }
-        var why = e.status === 401 ? '로그인이 만료되었습니다 — 로그아웃 후 새 토큰으로 다시 로그인해 주세요'
-          : e.status === 403 || e.status === 404 ? '저장 권한이 없습니다 — 오른쪽 위 로그아웃 → 「토큰 만들기」로 새 토큰을 만들어 다시 로그인해 주세요'
-          : '저장 실패';
+        var why = e.status === 401 ? 'Login expired — log out and log in again with a new token'
+          : e.status === 403 || e.status === 404 ? 'No permission to save — Log out (top right), then "Create token" for a new one'
+          : 'Save failed';
         toast(why);
         /* 토스트는 금방 사라진다 — 이유는 상단 상태줄에 남긴다 */
         saveStatus.textContent = why + ' · ' + e.message;
@@ -304,7 +265,6 @@
   var liveTimer = null;
   function watchLive(text, done) {
     var want = text.replace(/\r\n/g, '\n');
-    var origin = LOCAL ? SITE_URL : location.origin;
     var tries = 0;
     if (liveTimer) clearTimeout(liveTimer);
     function again() {
@@ -312,7 +272,7 @@
       liveTimer = setTimeout(poll, 6000);
     }
     function poll() {
-      fetch(origin + '/content/data.js?live=' + Date.now(), { cache: 'no-store' })
+      fetch(location.origin + '/content/data.js?live=' + Date.now(), { cache: 'no-store' })
         .then(function (r) { return r.ok ? r.text() : ''; })
         .then(function (t) { if (t.replace(/\r\n/g, '\n') === want) done(true); else again(); })
         .catch(again);
@@ -320,9 +280,9 @@
     poll();
   }
 
-  saveBtn.addEventListener('click', save);
+  saveBtn.addEventListener('click', function () { save(false); });
   document.addEventListener('keydown', function (e) {
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); save(); }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); save(false); }
   });
 
   /* ---------- PDF → 페이지 이미지 ---------- */
@@ -339,13 +299,13 @@
       var sc = document.createElement('script');
       sc.src = PDFJS + 'pdf.min.js';
       sc.onload = function () {
-        if (!window.pdfjsLib) { reject(new Error('pdf.js 를 읽지 못했습니다')); return; }
+        if (!window.pdfjsLib) { reject(new Error('Could not start the PDF converter')); return; }
         window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js';
         resolve(window.pdfjsLib);
       };
       sc.onerror = function () {
         pdfjsPromise = null;
-        reject(new Error('PDF 변환기를 받아오지 못했습니다 — 인터넷 연결을 확인해 주세요'));
+        reject(new Error('Could not load the PDF converter — check your internet connection'));
       };
       document.head.appendChild(sc);
     });
@@ -354,8 +314,7 @@
 
   /* PDF 한 권 → 페이지마다 JPEG 한 장. 사이트는 같은 doc 의 페이지들을 두 칸으로 늘어놓는다 */
   function rasterizePdf(file, onProgress) {
-    var base = fileSlug(file.name).replace(/\.pdf$/i, '')
-      .replace(/[^0-9a-z]+/g, '-').replace(/^-+|-+$/g, '') || 'pdf';
+    var base = fileSlug(file.name).replace(/\.pdf$/, '');
     return ensurePdfjs()
       .then(function () { return file.arrayBuffer(); })
       .then(function (buf) { return window.pdfjsLib.getDocument({ data: new Uint8Array(buf) }).promise; })
@@ -453,7 +412,7 @@
           n++;
         }
         taken[rel] = true;
-        return apiUpload(f, rel).then(function () { results.push(rel); });
+        return stageUpload(f, rel).then(function () { results.push(rel); });
       });
     });
     chain
@@ -461,22 +420,20 @@
       .catch(function (e) { done(e, results); });
   }
 
+  /* 못 올린 파일을 모르고 저장해 버리지 않게 — 토스트 말고 상태줄과 알림창에도 남긴다 */
+  function uploadFailed(err) {
+    toast('Upload failed: ' + err.message.split('\n')[0]);
+    saveStatus.textContent = 'Upload failed — ' + err.message.replace(/\n/g, ' ');
+    saveStatus.classList.add('dirty');
+    window.alert('Some files were not added.\n\n' + err.message);
+  }
+
   function uploadButton(labelText, accept, multiple, folder, onDone) {
     var b = el('button', 'upload-btn', labelText);
     b.addEventListener('click', function () {
       pickFiles(accept, multiple, function (files) {
-        b.classList.add('busy');
-        b.textContent = '업로드 중…';
         uploadInto(folder, files, function (err, paths) {
-          b.classList.remove('busy');
-          b.textContent = labelText;
-          if (err) {
-            /* 토스트는 금방 사라진다 — 못 올린 파일을 모르고 저장해 버리지 않게 상태줄에도 남긴다 */
-            toast('업로드 실패: ' + err.message.split('\n')[0]);
-            saveStatus.textContent = '업로드 실패 — ' + err.message.replace(/\n/g, ' ');
-            saveStatus.classList.add('dirty');
-            window.alert('올리지 못한 파일이 있습니다.\n\n' + err.message);
-          }
+          if (err) uploadFailed(err);
           if (paths.length) onDone(paths);
         });
       });
@@ -484,121 +441,142 @@
     return b;
   }
 
+  /* 파일 하나 자리 (사진 · PDF · GIF) — 있으면 미리보기 + 제거, 없으면 올리기 */
+  function singleFile(src, opts) {
+    var wrap = el('div');
+    if (src) {
+      if (opts.preview) {
+        var img = el('img', 'cover-preview');
+        img.src = mediaUrl(src);
+        wrap.appendChild(img);
+      } else {
+        wrap.appendChild(el('div', 'media-src', src));
+      }
+      var rm = el('button', 'mini-btn danger', opts.removeLabel);
+      rm.addEventListener('click', function () {
+        if (opts.confirm && !confirm(opts.confirm)) return;
+        if (opts.deleteFile && src.indexOf('content/media/') === 0) stageDelete(src);
+        opts.set('');
+        setDirty(); render();
+      });
+      wrap.appendChild(rm);
+    } else {
+      wrap.appendChild(uploadButton(opts.uploadLabel, opts.accept, false, opts.folder, function (paths) {
+        opts.set(paths[0]);
+        setDirty(); render();
+      }));
+    }
+    return wrap;
+  }
+
   /* ---------- 렌더링 ---------- */
+
+  function sectionTitle(text) {
+    main.appendChild(el('h2', 'section-title', text));
+  }
+
+  function backButton(label) {
+    var back = el('button', 'editor-back', '← Back to ' + label);
+    back.addEventListener('click', function () { editing = null; render(); });
+    main.appendChild(back);
+  }
+
+  /* 「View site」는 지금 고치는 방(또는 항목)을 연다 */
+  function siteHash() {
+    if (editing && editing.list === 'works') return '#w/' + encodeURIComponent(editing.id);
+    if (editing && editing.list === 'studies') return '#s/' + encodeURIComponent(editing.id);
+    return '#' + view;
+  }
 
   function render() {
     navBtns.forEach(function (b) {
-      b.classList.toggle('active', b.getAttribute('data-view') === view && !editing);
+      b.classList.toggle('active', b.getAttribute('data-view') === view);
     });
-    if (deployTimer) { clearInterval(deployTimer); deployTimer = null; }
+    siteNameBtn.textContent = DATA.siteName || 'PORTFOLIO';
     main.textContent = '';
+    main.scrollTop = 0;
     if (editing) {
       if (editing.list === 'news') renderNewsEditor();
       else renderEditor();
-      return;
-    }
-    if (view === 'basic') renderBasic();
-    else if (view === 'works') renderList('works');
-    else if (view === 'news') renderNews();
-    else if (view === 'deploy') renderDeploy();
-    else renderList('studies');
+    } else if (view === 'home') renderHome();
+    else if (view === 'cv') renderCv();
+    else if (view === 'about') renderAbout();
+    else if (view === 'contact') renderContact();
+    else renderList(view === 'studies' ? 'studies' : 'works');
+    siteLink.href = '/' + siteHash();
   }
 
   navBtns.forEach(function (b) {
     b.addEventListener('click', function () {
+      if (!DATA) return;
       view = b.getAttribute('data-view');
       editing = null;
       render();
     });
   });
 
-  /* ----- 기본 정보 ----- */
+  /* ----- Home — 사이트 이름을 누르면 오는 곳 ----- */
 
-  function renderBasic() {
-    main.appendChild(el('h2', 'section-title', '기본 정보'));
-
-    main.appendChild(field('상단에 표시되는 이름', input(DATA.siteName, function (v) { DATA.siteName = v; }), '예: DOYEON LEE'));
-
-    main.appendChild(field('홈 화면 한 줄 소개 (영문)',
+  function renderHome() {
+    sectionTitle('Home');
+    main.appendChild(field('Site name', input(DATA.siteName, function (v) { DATA.siteName = v; }), 'Shown at the top left of every page. e.g. DOYEON LEE'));
+    main.appendChild(field('Search description',
       input(DATA.siteTagline, function (v) { DATA.siteTagline = v; }, 'Student in Seoul working between …'),
-      '화면에는 보이지 않고 검색엔진(구글)만 읽는 소개 문장입니다. 이름·분야·도시가 들어가면 좋습니다.'));
+      'Not shown on the page — only search engines (Google) read it. Include your name, field and city.'));
+    main.appendChild(el('p', 'field-hint',
+      'The home page keywords (Digital Heritage, Interactive Media Art …) are set per work and research, under Themes.'));
+  }
 
-    main.appendChild(field('About — Artist Statement (영문 권장)',
-      textarea(DATA.about.statement || DATA.about.text, 8, function (v) { DATA.about.statement = v; DATA.about.text = v; }),
-      '1인칭 · 80~120단어 · 빈 줄로 문단 구분. 무엇을 다루고, 어떤 질문을 던지는지.'));
+  /* ----- About — 사이트 About 과 같은 순서: 사진 · Statement · Biography · Directions ----- */
 
-    main.appendChild(field('About — Biography (영문, 3인칭)',
-      textarea(DATA.about.bio, 4, function (v) { DATA.about.bio = v; }),
-      '"Doyeon Lee is …" 처럼 3인칭 · 80단어 이내. 큐레이터·전시 도록이 그대로 가져다 쓰는 문단입니다.'));
+  function renderAbout() {
+    sectionTitle('About');
+    var ab = DATA.about;
+    main.appendChild(field('Photo (optional)', singleFile(ab.image, {
+      preview: true, folder: 'about', accept: 'image/*',
+      uploadLabel: 'Upload photo', removeLabel: 'Remove photo',
+      set: function (v) { ab.image = v; }
+    })));
 
-    main.appendChild(field('연구 방향 키워드 (Directions)',
-      input(joinList(DATA.about.directions), function (v) { DATA.about.directions = splitList(v); }, 'Interactive Installation, XR & Immersive Space, …'),
-      '쉼표로 구분 · 영문 · 4~8개. About 화면에 한 줄로 이어져 표시됩니다. 앞으로 하고 싶은 것을 솔직하게.'));
+    main.appendChild(field('Statement',
+      textarea(ab.statement || ab.text, 8, function (v) { ab.statement = v; ab.text = v; }),
+      'First person · 80–120 words · a blank line between paragraphs. What you work with and what you ask.'));
 
-    main.appendChild(field('CV (한 줄에 한 항목)',
-      textarea(Array.isArray(DATA.about.cv) ? DATA.about.cv.join('\n') : (DATA.about.cv || ''), 10, function (v) {
-        DATA.about.cv = v.split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
-      }),
-      'CV 페이지 맨 위에 표시됩니다 (학력 등). 연도로 시작하는 줄(예: 2026  Time of Materiality — Group Exhibition, Seoul)은 연도 열이 자동 분리됩니다.\n"- " 로 시작하면 연도 없는 항목, 그 외(예: Education)는 소제목이 됩니다. 수상·장학·학회는 여기 말고 왼쪽 「CV」 탭에서 항목으로 넣으세요. 영문 권장.'));
+    main.appendChild(field('Biography',
+      textarea(ab.bio, 4, function (v) { ab.bio = v; }),
+      'Third person ("Doyeon Lee is …") · under 80 words. Curators and catalogues copy this paragraph as it is.'));
 
-    // CV PDF
-    var pdfWrap = el('div');
-    if (DATA.about.cvPdf) {
-      pdfWrap.appendChild(el('div', 'media-src', DATA.about.cvPdf));
-      var prm = el('button', 'mini-btn danger', 'PDF 제거');
-      prm.addEventListener('click', function () {
-        if (!confirm('CV PDF를 제거할까요?\n업로드했던 파일도 함께 삭제됩니다.')) return;
-        if (DATA.about.cvPdf.indexOf('content/media/') === 0) apiDelete(DATA.about.cvPdf);
-        DATA.about.cvPdf = ''; setDirty(); render();
-      });
-      pdfWrap.appendChild(prm);
-    } else {
-      pdfWrap.appendChild(uploadButton('CV PDF 업로드', 'application/pdf,.pdf', false, 'about', function (paths) {
-        DATA.about.cvPdf = paths[0];
-        setDirty(); render();
-      }));
-    }
-    main.appendChild(field('CV PDF (선택)', pdfWrap, 'CV 화면 맨 아래 "Download CV (PDF)" 링크로 표시됩니다.'));
+    main.appendChild(field('Directions',
+      input(joinList(ab.directions), function (v) { ab.directions = splitList(v); }, 'Interactive Installation, XR & Immersive Space, …'),
+      'Comma-separated · 4–8 items. Shown as one line on the About page.'));
+  }
 
-    // About 이미지
-    var wrap = el('div');
-    if (DATA.about && DATA.about.image) {
-      var img = el('img', 'cover-preview');
-      img.src = mediaUrl(DATA.about.image);
-      wrap.appendChild(img);
-      var rm = el('button', 'mini-btn danger', '이미지 제거');
-      rm.addEventListener('click', function () { DATA.about.image = ''; setDirty(); render(); });
-      wrap.appendChild(rm);
-    } else {
-      wrap.appendChild(uploadButton('이미지 업로드', 'image/*', false, 'about', function (paths) {
-        DATA.about.image = paths[0];
-        setDirty(); render();
-      }));
-    }
-    main.appendChild(field('About 사진 (선택)', wrap));
+  /* ----- Contact ----- */
 
-    // Contact
+  function renderContact() {
+    sectionTitle('Contact');
     var cwrap = el('div');
-    (DATA.contact || []).forEach(function (c, i) {
+    DATA.contact.forEach(function (c, i) {
       var row = el('div', 'contact-edit-row');
-      var l = el('div', 'c-label'); l.appendChild(input(c.label, function (v) { c.label = v; }, '항목 (예: Email)'));
-      var v = el('div', 'c-value'); v.appendChild(input(c.value, function (val) { c.value = val; }, '내용'));
-      var h = el('div', 'c-href'); h.appendChild(input(c.href, function (val) { c.href = val; }, '링크 주소 (비우면 자동)'));
-      var d = el('button', 'mini-btn danger', '삭제');
+      var l = el('div', 'c-label'); l.appendChild(input(c.label, function (v) { c.label = v; }, 'Label (e.g. Email)'));
+      var v = el('div', 'c-value'); v.appendChild(input(c.value, function (val) { c.value = val; }, 'Value'));
+      var h = el('div', 'c-href'); h.appendChild(input(c.href, function (val) { c.href = val; }, 'Link (blank = automatic)'));
+      var d = el('button', 'mini-btn danger', 'Delete');
       d.addEventListener('click', function () { DATA.contact.splice(i, 1); setDirty(); render(); });
       row.appendChild(l); row.appendChild(v); row.appendChild(h); row.appendChild(d);
       cwrap.appendChild(row);
     });
-    var add = el('button', 'add-btn', '+ 연락처 추가');
+    var add = el('button', 'add-btn', '+ Add contact');
     add.addEventListener('click', function () {
       DATA.contact.push({ label: '', value: '', href: '' });
       setDirty(); render();
     });
     cwrap.appendChild(add);
-    main.appendChild(field('Contact 목록', cwrap, '이메일은 링크를 비워 두면 자동으로 메일 링크가 됩니다.'));
+    main.appendChild(field('Contact list', cwrap,
+      'An email becomes a mail link when Link is blank. Other links need the full https:// address.'));
   }
 
-  /* ----- 목록 ----- */
+  /* ----- Works · Research 목록 ----- */
 
   function itemThumb(item) {
     var src = item.cover;
@@ -618,25 +596,26 @@
     return el('div', 'item-thumb-blank', label);
   }
 
+  function statusLabel(k) {
+    for (var i = 0; i < STATUS.length; i++) if (STATUS[i][0] === k) return STATUS[i][1];
+    return 'Completed';
+  }
+
   function renderList(listName) {
     var arr = DATA[listName];
-    main.appendChild(el('h2', 'section-title', listName === 'works' ? 'Works' : 'Research'));
-    main.appendChild(el('p', 'field-hint', listName === 'works'
-      ? '맨 위 항목이 첫 화면의 왼쪽 첫 번째로 보입니다. ↑↓로 순서를 바꿀 수 있습니다. 가장 강한 작업을 맨 위에.'
-      : '사이트의 Research 페이지에 표시됩니다. 진행 중 → 제안 → 완료 순으로 묶이고, 묶음 안에서는 ↑↓ 순서를 따릅니다.'));
+    var isWorks = listName === 'works';
+    sectionTitle(isWorks ? 'Works' : 'Research');
+    main.appendChild(el('p', 'field-hint', isWorks
+      ? 'The top item comes first in the Works grid. Reorder with ↑ ↓ — put the strongest work first.'
+      : 'Grouped on the site as Ongoing → Proposed → Completed; the ↑ ↓ order applies within each group.'));
 
     var list = el('div', 'item-list');
     arr.forEach(function (item, i) {
       var row = el('div', 'item-row');
       row.appendChild(itemThumb(item));
-      row.appendChild(el('span', 'item-name', item.title || '(제목 없음)'));
-      if (listName === 'studies') {
-        var st = { ongoing: '진행 중', proposed: '제안', completed: '완료' }[item.status] || '완료';
-        row.appendChild(el('span', 'item-year', st));
-      }
-      if (listName === 'works' && item.hover && item.hover.enabled === false) {
-        row.appendChild(el('span', 'item-year', 'hover 끔'));
-      }
+      row.appendChild(el('span', 'item-name', item.title || '(untitled)'));
+      if (!isWorks) row.appendChild(el('span', 'item-year', statusLabel(item.status)));
+      if (isWorks && item.hover && item.hover.enabled === false) row.appendChild(el('span', 'item-year', 'Hover off'));
       row.appendChild(el('span', 'item-year', item.year || ''));
 
       var up = el('button', 'mini-btn', '↑');
@@ -651,53 +630,29 @@
         arr.splice(i + 1, 0, arr.splice(i, 1)[0]);
         setDirty(); render();
       });
-      var edit = el('button', 'mini-btn', '수정');
+      var edit = el('button', 'mini-btn', 'Edit');
       edit.addEventListener('click', function () {
         editing = { list: listName, id: item.id };
         render();
       });
-      var del = el('button', 'mini-btn danger', '삭제');
+      var del = el('button', 'mini-btn danger', 'Delete');
       del.addEventListener('click', function () {
-        if (!confirm('「' + (item.title || '제목 없음') + '」 항목을 삭제할까요?\n업로드했던 미디어 파일도 함께 삭제됩니다.')) return;
+        if (!confirm('Delete "' + (item.title || 'untitled') + '"?\nIts uploaded media files are deleted too.')) return;
         arr.splice(i, 1);
-        apiDelete('content/media/' + item.id);
+        stageDelete('content/media/' + item.id);
         setDirty(); render();
       });
       row.appendChild(up); row.appendChild(down); row.appendChild(edit); row.appendChild(del);
       list.appendChild(row);
     });
+    if (!arr.length) list.appendChild(el('p', 'field-hint', isWorks ? 'No works yet.' : 'No research entries yet.'));
     main.appendChild(list);
 
-    /* Studies 페이지 장식 GIF — 사이트의 Studies 화면에 표시된다 */
-    if (listName === 'studies') {
-      var gwrap = el('div');
-      if (DATA.studiesGif) {
-        var gimg = el('img', 'cover-preview');
-        gimg.src = mediaUrl(DATA.studiesGif);
-        gwrap.appendChild(gimg);
-        var grm = el('button', 'mini-btn danger', 'GIF 제거');
-        grm.addEventListener('click', function () {
-          if (!confirm('Studies 페이지의 GIF를 제거할까요?\n업로드했던 파일도 함께 삭제됩니다.')) return;
-          if (DATA.studiesGif.indexOf('content/media/') === 0) apiDelete(DATA.studiesGif);
-          DATA.studiesGif = '';
-          setDirty(); render();
-        });
-        gwrap.appendChild(grm);
-      } else {
-        gwrap.appendChild(uploadButton('GIF / 이미지 업로드', 'image/*', false, 'studies', function (paths) {
-          DATA.studiesGif = paths[0];
-          setDirty(); render();
-        }));
-      }
-      main.appendChild(field('Research 페이지 GIF (선택)', gwrap,
-        '연구 목록이 비어 있을 때만 표시되는 움직이는 이미지입니다. 항목이 하나라도 있으면 보이지 않습니다.'));
-    }
-
-    var add = el('button', 'add-btn', listName === 'works' ? '+ 새 작업 추가' : '+ 새 연구 추가');
+    var add = el('button', 'add-btn', isWorks ? '+ Add work' : '+ Add research');
     add.addEventListener('click', function () {
-      var title = prompt('제목을 입력하세요 (영문 권장 · 나중에 수정 가능)', '');
+      var title = prompt('Title (you can change it later)', '');
       if (title === null) return;
-      title = title.trim() || (listName === 'works' ? 'New Work' : 'New Research');
+      title = title.trim() || (isWorks ? 'New Work' : 'New Research');
       var item = {
         id: uniqueId(title),
         title: title,
@@ -707,7 +662,7 @@
         description: '',
         links: []
       };
-      if (listName === 'works') {
+      if (isWorks) {
         item.medium = ''; item.duration = ''; item.format = ''; item.role = '';
         item.tools = ''; item.credits = ''; item.exhibitions = []; item.themes = []; item.descriptionKo = '';
       } else {
@@ -718,9 +673,21 @@
       setDirty(); render();
     });
     main.appendChild(add);
+
+    /* Research 페이지 GIF — 사이트는 목록 아래에 늘 건다 */
+    if (!isWorks) {
+      var gifField = field('Research page GIF (optional)', singleFile(DATA.studiesGif, {
+        preview: true, folder: 'studies', accept: 'image/*', deleteFile: true,
+        uploadLabel: 'Upload GIF / image', removeLabel: 'Remove GIF',
+        confirm: 'Remove the Research page GIF?\nThe uploaded file is deleted too.',
+        set: function (v) { DATA.studiesGif = v; }
+      }), 'An animated image shown below the list on the Research page.');
+      gifField.style.marginTop = '48px';
+      main.appendChild(gifField);
+    }
   }
 
-  /* ----- 편집기 ----- */
+  /* ----- Works · Research 편집기 ----- */
 
   function findEditing() {
     var arr = DATA[editing.list];
@@ -759,18 +726,18 @@
     var cap = document.createElement('input');
     cap.className = 'media-caption-input';
     cap.value = m.caption || '';
-    cap.placeholder = '사진/영상 설명 (선택)';
+    cap.placeholder = 'Caption (optional)';
     cap.addEventListener('input', function () { m.caption = cap.value; setDirty(); });
     info.appendChild(cap);
     info.appendChild(el('div', 'media-src', m.src));
     row.appendChild(info);
 
     var btns = moveBtns(media, i, i + 1);
-    var del = el('button', 'mini-btn danger', '삭제');
+    var del = el('button', 'mini-btn danger', 'Delete');
     del.addEventListener('click', function () {
-      if (!confirm('이 미디어를 삭제할까요?')) return;
+      if (!confirm('Delete this media?')) return;
       var t = m.type || extType(m.src);
-      if (t !== 'embed' && m.src && m.src.indexOf('content/media/') === 0) apiDelete(m.src);
+      if (t !== 'embed' && m.src && m.src.indexOf('content/media/') === 0) stageDelete(m.src);
       media.splice(i, 1);
       setDirty(); render();
     });
@@ -786,16 +753,16 @@
     row.appendChild(mediaThumb(pages[0]));
 
     var info = el('div', 'media-info');
-    info.appendChild(el('div', null, 'PDF · ' + pages.length + '페이지 — 상세 화면에 2열로 펼쳐집니다'));
-    info.appendChild(el('div', 'media-src', pages[0].src.replace(/-p\d+\.jpg$/i, '') + ' — ' + pages.length + '장'));
+    info.appendChild(el('div', null, 'PDF · ' + pages.length + ' pages — laid out in two columns in the detail view'));
+    info.appendChild(el('div', 'media-src', pages[0].src.replace(/-p\d+\.jpg$/i, '') + ' — ' + pages.length + ' pages'));
     row.appendChild(info);
 
     var btns = moveBtns(media, blk[0], blk[1]);
-    var del = el('button', 'mini-btn danger', '삭제');
+    var del = el('button', 'mini-btn danger', 'Delete');
     del.addEventListener('click', function () {
-      if (!confirm('이 PDF 의 페이지 ' + pages.length + '장을 모두 삭제할까요?')) return;
+      if (!confirm('Delete all ' + pages.length + ' pages of this PDF?')) return;
       pages.forEach(function (p) {
-        if (p.src && p.src.indexOf('content/media/') === 0) apiDelete(p.src);
+        if (p.src && p.src.indexOf('content/media/') === 0) stageDelete(p.src);
       });
       media.splice(blk[0], blk[1] - blk[0]);
       setDirty(); render();
@@ -805,93 +772,83 @@
     return row;
   }
 
+  /* 홈 문양 키워드 체크 — 작품·연구 공용 */
+  function themeChecks(item) {
+    var wrap = el('div', 'check-grid');
+    THEMES.forEach(function (t) {
+      wrap.appendChild(checkbox((item.themes || []).indexOf(t[0]) >= 0, function (on) {
+        var arr = (item.themes || []).filter(function (k) { return k !== t[0]; });
+        if (on) arr.push(t[0]);
+        item.themes = THEMES.map(function (x) { return x[0]; }).filter(function (k) { return arr.indexOf(k) >= 0; });
+      }, t[1]));
+    });
+    return wrap;
+  }
+
   function renderEditor() {
     var item = findEditing();
     if (!item) { editing = null; render(); return; }
 
-    var back = el('button', 'editor-back', '← 목록으로 돌아가기');
-    back.addEventListener('click', function () { editing = null; render(); });
-    main.appendChild(back);
-
     var isWork = editing.list === 'works';
-    main.appendChild(el('h2', 'section-title', isWork ? 'Work 편집' : 'Research 편집'));
+    backButton(isWork ? 'Works' : 'Research');
+    sectionTitle(isWork ? 'Edit work' : 'Edit research');
 
-    main.appendChild(field('제목 (영문 권장)', input(item.title, function (v) { item.title = v; }),
-      isWork ? '소프트웨어 이름은 제목이 아니라 아래 「사용 도구」에. 예: Ethereal' : '예: Materiality of Tteoljam'));
-    main.appendChild(field(isWork ? '연도' : '기간', input(item.year, function (v) { item.year = v; }, isWork ? '예: 2026' : '예: 2025– (진행 중) · 2026 (완료)')));
+    main.appendChild(field('Title', input(item.title, function (v) { item.title = v; }),
+      isWork ? 'Software names go under Tools, not in the title. e.g. Ethereal' : 'e.g. Materiality of Tteoljam'));
+    main.appendChild(field(isWork ? 'Year' : 'Period', input(item.year, function (v) { item.year = v; }, isWork ? 'e.g. 2026' : 'e.g. 2025– (ongoing) · 2026 (completed)')));
 
     if (isWork) {
-      /* ---- 작품 정보 (톰스톤) — 비워 두면 그 줄은 사이트에 표시되지 않습니다 ---- */
-      main.appendChild(field('매체 · 형식', input(item.medium, function (v) { item.medium = v; }, 'Single-channel video, colour, sound'),
-        '미술관 라벨처럼. 채널 수 · 색 · 사운드 여부. 첫 화면 커서 라벨에는 쉼표 앞부분만 짧게 붙습니다.'));
+      /* ---- 작품 정보 (톰스톤) — 비워 두면 그 줄은 사이트에 표시되지 않는다 ---- */
+      main.appendChild(field('Medium', input(item.medium, function (v) { item.medium = v; }, 'Single-channel video, colour, sound'),
+        'Like a museum label: channels · colour · sound. The part before the first comma appears under the title in the Works grid.'));
       var durRow = el('div', 'link-row');
-      var durF = field('길이', input(item.duration, function (v) { item.duration = v; }, '4:32'));
+      var durF = field('Duration', input(item.duration, function (v) { item.duration = v; }, '4:32'));
       durF.style.marginBottom = '0'; durF.style.width = '140px';
-      var fmtF = field('포맷 (선택)', input(item.format, function (v) { item.format = v; }, '3840×2160, 16:9'));
+      var fmtF = field('Format (optional)', input(item.format, function (v) { item.format = v; }, '3840×2160, 16:9'));
       fmtF.style.marginBottom = '0'; fmtF.style.flex = '1';
       durRow.appendChild(durF); durRow.appendChild(fmtF);
-      main.appendChild(field('길이 · 포맷', durRow));
-      main.appendChild(field('역할', input(item.role, function (v) { item.role = v; }, 'Concept, direction, generative pipeline, editing'),
-        '이 작업에서 맡은 부분. 공동작업이면 협업자는 아래 「크레딧」에.'));
-      main.appendChild(field('사용 도구', input(joinList(item.tools), function (v) { item.tools = v; }, 'Unreal Engine 5, ComfyUI, DaVinci Resolve'),
-        '쉼표로 구분. 실제로 쓴 것만 — 배우고 싶은 도구는 Research 키워드에.'));
-      main.appendChild(field('크레딧 (선택)', input(item.credits, function (v) { item.credits = v; }, 'Sound: …  ·  Made in Media Art Studio II, Duksung Women\'s University')));
-      main.appendChild(field('전시 · 상영 이력 (한 줄에 하나, 선택)',
+      main.appendChild(field('Duration · Format', durRow));
+      main.appendChild(field('Role', input(item.role, function (v) { item.role = v; }, 'Concept, direction, generative pipeline, editing'),
+        'What you did in this work. Collaborators go under Credits.'));
+      main.appendChild(field('Tools', input(joinList(item.tools), function (v) { item.tools = v; }, 'Unreal Engine 5, ComfyUI, DaVinci Resolve'),
+        'Comma-separated. Only what you actually used — tools you want to learn belong in Research keywords.'));
+      main.appendChild(field('Credits (optional)', input(item.credits, function (v) { item.credits = v; }, 'Sound: …  ·  Made in Media Art Studio II, Duksung Women\'s University')));
+      main.appendChild(field('Exhibited (one per line, optional)',
         textarea(Array.isArray(item.exhibitions) ? item.exhibitions.join('\n') : (item.exhibitions || ''), 3, function (v) {
-          item.exhibitions = v.split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
+          item.exhibitions = lines(v);
         }),
-        '예: 2026 — Degree Show, Duksung Women\'s University, Seoul. 온라인 전시·학교 전시도 그대로 적습니다. 없으면 비워 두세요.'));
-
-      var thWrap = el('div', 'check-grid');
-      THEMES.forEach(function (t) {
-        thWrap.appendChild(checkbox((item.themes || []).indexOf(t[0]) >= 0, function (on) {
-          var arr = (item.themes || []).filter(function (k) { return k !== t[0]; });
-          if (on) arr.push(t[0]);
-          item.themes = THEMES.map(function (x) { return x[0]; }).filter(function (k) { return arr.indexOf(k) >= 0; });
-        }, t[1]));
-      });
-      main.appendChild(field('주제 (홈 화면의 네 키워드)', thWrap,
-        '체크한 키워드 위에 마우스를 올리면 이 작품 제목이 함께 나타납니다. 상세 화면 Themes 줄에도 표시됩니다.'));
+        'e.g. 2026 — Degree Show, Duksung Women\'s University, Seoul. School and online shows count too.'));
+      main.appendChild(field('Themes (home page keywords)', themeChecks(item),
+        'Hovering a checked keyword on the home page shows this work\'s title. Also listed under Themes in the detail view.'));
     } else {
-      main.appendChild(field('상태', select(item.status || 'completed', [
-        ['ongoing', '진행 중 (Ongoing)'], ['proposed', '제안 · 계획 (Proposed)'], ['completed', '완료 (Completed)']
-      ], function (v) { item.status = v; }),
-        'Research 페이지에서 진행 중 → 제안 → 완료 순으로 묶입니다. 하고 싶은 연구는 「제안」으로 솔직하게.'));
-      var sthWrap = el('div', 'check-grid');
-      THEMES.forEach(function (t) {
-        sthWrap.appendChild(checkbox((item.themes || []).indexOf(t[0]) >= 0, function (on) {
-          var arr = (item.themes || []).filter(function (k) { return k !== t[0]; });
-          if (on) arr.push(t[0]);
-          item.themes = THEMES.map(function (x) { return x[0]; }).filter(function (k) { return arr.indexOf(k) >= 0; });
-        }, t[1]));
-      });
-      main.appendChild(field('주제 (홈 화면의 키워드)', sthWrap,
-        'Research 목록에는 이 큰 주제가, 상세 화면에는 주제와 세부 키워드가 함께 표시됩니다. 홈에서 해당 키워드에 마우스를 올리면 이 연구 제목도 나타납니다.'));
-
-      main.appendChild(field('한 줄 요약 (영문)', input(item.summary, function (v) { item.summary = v; }, 'What the study asks and how — one or two sentences'),
-        'Research 목록에서 제목 아래에 보이는 문장. 40단어 이내.'));
-      main.appendChild(field('키워드', input(joinList(item.keywords), function (v) { item.keywords = splitList(v); }, 'Cultural Heritage, Generative AI, Technical Image'),
-        '쉼표로 구분 · 영문 · 2~5개. 상태와 함께 한 줄로 표시됩니다.'));
+      main.appendChild(field('Status', select(item.status || 'completed', STATUS, function (v) { item.status = v; }),
+        'The Research page groups entries in this order. Use Proposed for research you plan to do.'));
+      main.appendChild(field('Themes (home page keywords)', themeChecks(item),
+        'Shown in the Research list and the detail view. Hovering the keyword on the home page shows this title too.'));
+      main.appendChild(field('Summary', input(item.summary, function (v) { item.summary = v; }, 'What the study asks and how — one or two sentences'),
+        'Shown under the title in the Research list. Under 40 words.'));
+      main.appendChild(field('Keywords', input(joinList(item.keywords), function (v) { item.keywords = splitList(v); }, 'Cultural Heritage, Generative AI, Technical Image'),
+        'Comma-separated · 2–5. Shown in the detail view (and in the list when no theme is checked).'));
 
       var rwWrap = el('div', 'check-grid');
-      (DATA.works || []).forEach(function (w) {
+      DATA.works.forEach(function (w) {
         rwWrap.appendChild(checkbox((item.relatedWorks || []).indexOf(w.id) >= 0, function (on) {
           var arr = (item.relatedWorks || []).filter(function (k) { return k !== w.id; });
           if (on) arr.push(w.id);
           item.relatedWorks = arr;
         }, w.title || w.id));
       });
-      if (!(DATA.works || []).length) rwWrap.appendChild(el('p', 'field-hint', '등록된 작업이 없습니다.'));
-      main.appendChild(field('관련 작품', rwWrap, '체크한 작품의 상세 화면에 이 연구로 가는 링크(Research 줄)가 생기고, 연구 상세에는 작품 링크가 생깁니다.'));
+      if (!DATA.works.length) rwWrap.appendChild(el('p', 'field-hint', 'No works yet.'));
+      main.appendChild(field('Works', rwWrap, 'Each checked work links to this research from its detail view (Research line), and back.'));
     }
 
-    main.appendChild(field(isWork ? 'Statement (영문 권장)' : 'Abstract (영문 권장)',
+    main.appendChild(field(isWork ? 'Statement' : 'Abstract',
       textarea(item.description, 8, function (v) { item.description = v; }),
-      '상세 화면에 표시됩니다. 빈 줄로 문단을 나눌 수 있습니다.'));
+      'Shown in the detail view. A blank line starts a new paragraph.'));
     if (isWork) {
-      main.appendChild(field('국문 설명 (선택)',
+      main.appendChild(field('Korean text (optional)',
         textarea(item.descriptionKo, 5, function (v) { item.descriptionKo = v; }),
-        '사이트는 영문으로만 유지하기로 해서 지금은 전부 비어 있습니다. 여기에 국문을 쓰면 영문 아래에 옅은 선 하나 건너 다시 표시됩니다.'));
+        'The site is kept in English, so this is empty for every work. Text here appears below the English, after a faint line.'));
     }
 
     /* 미디어 */
@@ -907,22 +864,21 @@
     mwrap.appendChild(mlist);
 
     var urow = el('div', 'upload-row');
-    urow.appendChild(uploadButton('+ 파일 추가 (이미지 · 영상 · 3D)', 'image/*,video/mp4,video/webm,.glb,.gltf', true, item.id, function (paths) {
+    urow.appendChild(uploadButton('+ Add files (image · video · 3D)', 'image/*,video/mp4,video/webm,.glb,.gltf', true, item.id, function (paths) {
       paths.forEach(function (p) {
         item.media.push({ type: extType(p) || 'image', src: p, caption: '' });
       });
       setDirty(); render();
     }));
-    var PDF_LABEL = '+ PDF 추가 (모든 페이지를 이미지로)';
+    var PDF_LABEL = '+ Add PDF (every page as an image)';
     var pdfBtn = el('button', 'upload-btn', PDF_LABEL);
     pdfBtn.addEventListener('click', function () {
       pickFiles('application/pdf,.pdf', false, function (files) {
         pdfBtn.classList.add('busy');
-        pdfBtn.textContent = 'PDF 를 읽는 중…';
+        pdfBtn.textContent = 'Reading the PDF…';
         rasterizePdf(files[0], function (n, total) {
-          pdfBtn.textContent = '페이지 변환 중… ' + n + ' / ' + total;
+          pdfBtn.textContent = 'Converting pages… ' + n + ' / ' + total;
         }).then(function (out) {
-          pdfBtn.textContent = '업로드 중… (' + out.files.length + '장)';
           /* 같은 항목에 PDF 를 두 권 넣어도 묶음이 섞이지 않게 — doc 은 유일해야 한다 */
           var taken = {};
           item.media.forEach(function (m) { if (m.doc) taken[m.doc] = true; });
@@ -931,7 +887,7 @@
           uploadInto(item.id, out.files, function (err, paths) {
             pdfBtn.classList.remove('busy');
             pdfBtn.textContent = PDF_LABEL;
-            if (err) toast('업로드 실패: ' + err.message);
+            if (err) uploadFailed(err);
             paths.forEach(function (p) {
               item.media.push({ type: 'image', src: p, caption: '', doc: doc });
             });
@@ -946,9 +902,9 @@
     });
     urow.appendChild(pdfBtn);
 
-    var embedBtn = el('button', 'upload-btn', '+ YouTube / Vimeo 링크 추가');
+    var embedBtn = el('button', 'upload-btn', '+ Add YouTube / Vimeo link');
     embedBtn.addEventListener('click', function () {
-      var url = prompt('YouTube 또는 Vimeo 영상 주소를 붙여넣으세요');
+      var url = prompt('Paste a YouTube or Vimeo URL');
       if (!url) return;
       item.media.push({ type: 'embed', src: url.trim(), caption: '' });
       setDirty(); render();
@@ -956,52 +912,44 @@
     urow.appendChild(embedBtn);
     mwrap.appendChild(urow);
 
-    main.appendChild(field('미디어 (위에서부터 순서대로 표시)', mwrap,
-      '이미지: jpg/png/webp · 영상: mp4 권장 (웹에서는 38MB 이하 — 더 큰 영상은 압축하거나 관리도구.bat 으로) · 3D: .glb 권장 (Blender에서 내보내기 → glTF 2.0).\n첫 번째 미디어가 영상이면 첫 화면에서 마우스를 올렸을 때 자동 재생됩니다 — 구간은 아래에서 정합니다.\nPDF 를 넣으면 모든 페이지가 이미지로 바뀌어 상세 화면에 2열(왼·오)로 쭉 펼쳐집니다. 페이지가 많으면 조금 걸리니 변환이 끝날 때까지 이 탭을 열어 두세요.'));
+    main.appendChild(field('Media (shown top to bottom)', mwrap,
+      'Images: jpg / png / webp · Video: mp4, up to 38 MB per file (compress larger videos, or add a YouTube / Vimeo link) · 3D: .glb (Blender → Export → glTF 2.0).\n' +
+      'If the first media is a video, it plays on hover in the Works grid — set the clip below.\n' +
+      'A PDF becomes one image per page, laid out in two columns in the detail view. Long PDFs take a while — keep this tab open until it finishes.'));
 
     if (isWork) renderHoverControls(item);
 
     /* 대표 이미지 */
-    var cwrap = el('div');
-    if (item.cover) {
-      var img = el('img', 'cover-preview');
-      img.src = mediaUrl(item.cover);
-      cwrap.appendChild(img);
-      var rm = el('button', 'mini-btn danger', '대표 이미지 제거');
-      rm.addEventListener('click', function () { item.cover = ''; setDirty(); render(); });
-      cwrap.appendChild(rm);
-    } else {
-      cwrap.appendChild(uploadButton('대표 이미지 업로드', 'image/*', false, item.id, function (paths) {
-        item.cover = paths[0];
-        setDirty(); render();
-      }));
-    }
-    main.appendChild(field('대표 이미지 (선택)', cwrap, isWork
-      ? '비워 두면 첫 번째 이미지가 자동으로 사용됩니다. 3D 작업이나 영상 작업의 목록 썸네일로 쓰입니다.'
-      : '비워 두면 첫 번째 이미지가 자동으로 사용됩니다. Research 목록의 썸네일(112×63)과 상세 화면 상단에 표시됩니다.'));
+    main.appendChild(field('Cover image (optional)', singleFile(item.cover, {
+      preview: true, folder: item.id, accept: 'image/*',
+      uploadLabel: 'Upload cover image', removeLabel: 'Remove cover image',
+      set: function (v) { item.cover = v; }
+    }), isWork
+      ? 'Blank = the first image is used. Recommended for video and 3D works — it is their thumbnail in the Works grid.'
+      : 'Blank = the first image is used. Shown as the thumbnail in the Research list.'));
 
-    /* 링크 */
+    /* 링크 — 사이트 상세 화면의 Related */
     var lwrap = el('div');
     (item.links || []).forEach(function (l, i) {
       var row = el('div', 'link-row');
-      var a = el('div'); a.style.width = '180px'; a.appendChild(input(l.label, function (v) { l.label = v; }, '링크 이름'));
+      var a = el('div'); a.style.width = '180px'; a.appendChild(input(l.label, function (v) { l.label = v; }, 'Label'));
       var b = el('div'); b.style.flex = '1'; b.appendChild(input(l.href, function (v) { l.href = v; }, 'https://…'));
-      var d = el('button', 'mini-btn danger', '삭제');
+      var d = el('button', 'mini-btn danger', 'Delete');
       d.addEventListener('click', function () { item.links.splice(i, 1); setDirty(); render(); });
       row.appendChild(a); row.appendChild(b); row.appendChild(d);
       lwrap.appendChild(row);
     });
-    var addLink = el('button', 'mini-btn', '+ 링크 추가 (논문 PDF, 외부 페이지 등)');
+    var addLink = el('button', 'mini-btn', '+ Add link (paper PDF, external page …)');
     addLink.addEventListener('click', function () {
       if (!item.links) item.links = [];
       item.links.push({ label: '', href: '' });
       setDirty(); render();
     });
     lwrap.appendChild(addLink);
-    main.appendChild(field('외부 링크 (선택)', lwrap));
+    main.appendChild(field('Related links (optional)', lwrap));
   }
 
-  /* ----- 첫 화면 hover 자동 재생 설정 ----- */
+  /* ----- Works 격자 hover 자동 재생 설정 ----- */
 
   function fmtTime(t) {
     if (!isFinite(t)) return '–';
@@ -1012,9 +960,9 @@
   function renderHoverControls(item) {
     var first = item.media && item.media[0];
     var isVid = first && (first.type || extType(first.src)) === 'video';
-    var TITLE = '마우스를 올렸을 때 자동 재생 (첫 화면)';
+    var TITLE = 'Hover preview (Works grid)';
     if (!isVid) {
-      main.appendChild(field(TITLE, el('p', 'field-hint', '첫 번째 미디어가 영상일 때 설정할 수 있습니다. (영상을 맨 위로 올리면 됩니다)')));
+      main.appendChild(field(TITLE, el('p', 'field-hint', 'Available when the first media is a video — move a video to the top.')));
       return;
     }
     var hv = item.hover || {};
@@ -1027,15 +975,15 @@
 
     var wrap = el('div');
     wrap.appendChild(checkbox(enabled, function (on) { H().enabled = on; render(); },
-      '마우스를 올리면 자동 재생 (끄면 대표 이미지만 보입니다)'));
+      'Play on hover (off = only the cover image)'));
 
     var row = el('div', 'link-row');
     var startIn = input(start == null ? '' : start, function (v) {
       H().start = v === '' ? null : Math.max(0, parseFloat(v) || 0);
       updateStatus();
-    }, '자동 (중간)');
+    }, 'Auto (middle)');
     startIn.type = 'number'; startIn.min = 0; startIn.step = 0.1;
-    var sf = field('시작 지점 (초)', startIn); sf.style.marginBottom = '0'; sf.style.width = '140px';
+    var sf = field('Start (sec)', startIn); sf.style.marginBottom = '0'; sf.style.width = '140px';
 
     var lenIn = input(length, function (v) {
       var x = parseFloat(v);
@@ -1043,16 +991,16 @@
       updateStatus();
     });
     lenIn.type = 'number'; lenIn.min = 1; lenIn.max = 30; lenIn.step = 0.5;
-    var lf = field('재생 길이 (초)', lenIn); lf.style.marginBottom = '0'; lf.style.width = '140px';
+    var lf = field('Length (sec)', lenIn); lf.style.marginBottom = '0'; lf.style.width = '140px';
 
-    var rateSel = select(rate, [['0.5', '0.5×'], ['0.75', '0.75×'], ['1', '1× (기본)'], ['1.25', '1.25×'], ['1.5', '1.5×'], ['2', '2×']],
+    var rateSel = select(rate, [['0.5', '0.5×'], ['0.75', '0.75×'], ['1', '1× (default)'], ['1.25', '1.25×'], ['1.5', '1.5×'], ['2', '2×']],
       function (v) { H().rate = parseFloat(v); updateStatus(); });
-    var rf = field('재생 속도', rateSel); rf.style.marginBottom = '0'; rf.style.width = '120px';
+    var rf = field('Speed', rateSel); rf.style.marginBottom = '0'; rf.style.width = '120px';
     row.appendChild(sf); row.appendChild(lf); row.appendChild(rf);
     wrap.appendChild(row);
 
     wrap.appendChild(checkbox(loop, function (on) { H().loop = on; },
-      '구간이 끝나면 처음부터 반복 (끄면 마지막 장면에서 멈춤)'));
+      'Loop the clip (off = stop on the last frame)'));
 
     /* 미리보기 — 네이티브 컨트롤의 스크러버가 곧 「장면 고르기」 */
     var pv = document.createElement('video');
@@ -1062,11 +1010,11 @@
     wrap.appendChild(pv);
 
     var btns = el('div', 'row-btns');
-    var playBtn = el('button', 'mini-btn', '▶ 하이라이트 미리보기');
-    var setBtn = el('button', 'mini-btn', '현재 위치를 시작점으로');
+    var playBtn = el('button', 'mini-btn', '▶ Preview clip');
+    var setBtn = el('button', 'mini-btn', 'Use current position as start');
     btns.appendChild(playBtn); btns.appendChild(setBtn);
     wrap.appendChild(btns);
-    var status = el('p', 'field-hint', '영상 정보를 읽는 중…');
+    var status = el('p', 'field-hint', 'Reading the video…');
     wrap.appendChild(status);
 
     var hlStart = 0, hlEnd = 0;
@@ -1086,10 +1034,10 @@
       var s = (typeof cur.start === 'number' && isFinite(cur.start)) ? cur.start : null;
       var r = (+cur.rate > 0) ? +cur.rate : 1;
       if (s != null && s >= pv.duration) {
-        status.textContent = '⚠ 시작 지점이 영상 길이(' + fmtTime(pv.duration) + ')를 넘어 사이트에서는 중간부터 재생됩니다';
+        status.textContent = '⚠ The start is past the end of the video (' + fmtTime(pv.duration) + ') — the site will start from the middle';
       } else {
-        status.textContent = '영상 길이 ' + fmtTime(pv.duration) + ' · 하이라이트 ' + fmtTime(hlStart) + ' → ' + fmtTime(hlEnd) +
-          ' (' + (hlEnd - hlStart).toFixed(1) + '초 · ' + r + '×)';
+        status.textContent = 'Video ' + fmtTime(pv.duration) + ' · clip ' + fmtTime(hlStart) + ' → ' + fmtTime(hlEnd) +
+          ' (' + (hlEnd - hlStart).toFixed(1) + ' s · ' + r + '×)';
       }
       startIn.max = Math.floor(pv.duration * 10) / 10;
     }
@@ -1108,7 +1056,7 @@
       if (pv._hl && cur.loop !== false) { pv.currentTime = hlStart; pv.play(); } else pv._hl = false;
     });
     playBtn.addEventListener('click', function () {
-      if (!calc()) { toast('영상 정보를 아직 읽지 못했습니다'); return; }
+      if (!calc()) { toast('The video has not loaded yet'); return; }
       var cur = item.hover || {};
       pv.playbackRate = (+cur.rate > 0) ? +cur.rate : 1;
       pv.currentTime = hlStart;
@@ -1125,22 +1073,23 @@
     if (!enabled) { row.style.opacity = '0.4'; pv.style.opacity = '0.4'; }
 
     main.appendChild(field(TITLE, wrap,
-      '첫 번째 영상의 이 구간이 첫 화면에서 마우스를 올렸을 때 소리 없이 재생됩니다. 터치 기기에서는 화면 가운데 온 작품이 같은 설정으로 재생됩니다.'));
+      'This clip of the first video plays muted when the pointer is over the work in the Works grid. On touch devices it plays when the work reaches the middle of the screen.'));
   }
 
-  /* ----- News — 수상 · 학회 · 소식 ----- */
+  /* ----- CV — 사이트 CV 페이지와 같은 순서: 맨 위 블록 · 항목 타임라인 · PDF ----- */
 
+  /* js/app.js NEWS_KINDS 와 같은 이름 — 둘을 같이 고칠 것 */
   var NEWS_KINDS = [
-    ['publication', '논문 (Publication)'],
-    ['award', '수상 (Award)'],
-    ['scholarship', '장학 (Scholarship)'],
-    ['conference', '학회 · 참가 (Conference)'],
-    ['talk', '발표 · 강연 (Talk)'],
-    ['exhibition', '전시 · 상영 (Exhibition)'],
-    ['project', '프로젝트 · 외주 (Projects)'],
-    ['press', '기사 · 인터뷰 (Press)'],
-    ['residency', '레지던시 (Residency)'],
-    ['service', '학내 · 대외 활동 (Service)']
+    ['publication', 'Publication'],
+    ['award', 'Award'],
+    ['scholarship', 'Scholarship'],
+    ['conference', 'Conference'],
+    ['talk', 'Talk'],
+    ['exhibition', 'Exhibition'],
+    ['project', 'Project'],
+    ['press', 'Press'],
+    ['residency', 'Residency'],
+    ['service', 'Service']
   ];
 
   function newsKindLabel(k) {
@@ -1155,10 +1104,17 @@
     return (String(p[0] || '0000').replace(/\D/g, '') || '0000') + '-' + pad(p[1]) + '-' + pad(p[2]);
   }
 
-  function renderNews() {
-    main.appendChild(el('h2', 'section-title', 'CV — 논문 · 수상 · 장학 · 학회 · 활동'));
+  function renderCv() {
+    sectionTitle('CV');
     main.appendChild(el('p', 'field-hint',
-      '사이트의 CV 페이지에 모든 종류가 한 목록으로, 최신순·연도별(2026, 2025 …)로 표시됩니다. 종류(Publication · Award …)는 각 줄 제목 아래에 붙습니다. 아직 오지 않은 날짜는 Upcoming 으로 표시됩니다. CV 페이지 맨 위의 학력은 「기본 정보」의 CV 칸에서 씁니다.'));
+      'The CV page shows the top block first, then every entry as one timeline, newest first and grouped by year. ' +
+      'Dates that have not come yet are marked Upcoming. The CV menu item is hidden while the page is empty.'));
+
+    var ab = DATA.about;
+    main.appendChild(field('Top block (Education …)',
+      textarea(Array.isArray(ab.cv) ? ab.cv.join('\n') : (ab.cv || ''), 6, function (v) { ab.cv = lines(v); }),
+      'One item per line. A line starting with a year (2026  B.F.A., Duksung Women\'s University, Seoul) gets a year column; ' +
+      'a line starting with "- " has no year; any other line (Education) becomes a subheading.'));
 
     var arr = DATA.news;
     var list = el('div', 'item-list');
@@ -1167,28 +1123,29 @@
       return ka < kb ? 1 : ka > kb ? -1 : 0;
     }).forEach(function (item) {
       var row = el('div', 'item-row');
-      row.appendChild(el('span', 'item-year', item.date || '날짜 없음'));
-      row.appendChild(el('span', 'item-name', item.title || '(제목 없음)'));
-      row.appendChild(el('span', 'item-year', newsKindLabel(item.kind).replace(/\s*\(.*\)$/, '')));
+      row.appendChild(el('span', 'item-year', item.date || 'No date'));
+      row.appendChild(el('span', 'item-name', item.title || '(untitled)'));
+      row.appendChild(el('span', 'item-year', newsKindLabel(item.kind)));
 
-      var edit = el('button', 'mini-btn', '수정');
+      var edit = el('button', 'mini-btn', 'Edit');
       edit.addEventListener('click', function () { editing = { list: 'news', id: item.id }; render(); });
-      var del = el('button', 'mini-btn danger', '삭제');
+      var del = el('button', 'mini-btn danger', 'Delete');
       del.addEventListener('click', function () {
-        if (!confirm('「' + (item.title || '제목 없음') + '」 소식을 삭제할까요?\n올린 사진도 함께 삭제됩니다.')) return;
+        if (!confirm('Delete "' + (item.title || 'untitled') + '"?\nIts photos are deleted too.')) return;
         arr.splice(arr.indexOf(item), 1);
-        apiDelete('content/media/' + item.id);
+        stageDelete('content/media/' + item.id);
         setDirty(); render();
       });
       row.appendChild(edit); row.appendChild(del);
       list.appendChild(row);
     });
-    if (!arr.length) list.appendChild(el('p', 'field-hint', '아직 등록된 소식이 없습니다.'));
-    main.appendChild(list);
+    if (!arr.length) list.appendChild(el('p', 'field-hint', 'No entries yet.'));
 
-    var add = el('button', 'add-btn', '+ 새 소식 추가');
+    var lwrap = el('div');
+    lwrap.appendChild(list);
+    var add = el('button', 'add-btn', '+ Add entry');
     add.addEventListener('click', function () {
-      var title = prompt('제목을 입력하세요 (영문 권장 · 나중에 수정 가능)\n예: Student Volunteer, SIGGRAPH Asia 2026', '');
+      var title = prompt('Title (you can change it later)\ne.g. Student Volunteer, SIGGRAPH Asia 2026', '');
       if (title === null) return;
       title = title.trim() || 'New Entry';
       var now = new Date();
@@ -1207,40 +1164,46 @@
       editing = { list: 'news', id: item.id };
       setDirty(); render();
     });
-    main.appendChild(add);
+    lwrap.appendChild(add);
+    main.appendChild(field('Entries — publications · awards · scholarships · conferences · activities', lwrap));
+
+    main.appendChild(field('CV PDF (optional)', singleFile(ab.cvPdf, {
+      folder: 'about', accept: 'application/pdf,.pdf', deleteFile: true,
+      uploadLabel: 'Upload CV PDF', removeLabel: 'Remove PDF',
+      confirm: 'Remove the CV PDF?\nThe uploaded file is deleted too.',
+      set: function (v) { ab.cvPdf = v; }
+    }), 'Shown as "Download CV (PDF)" at the bottom of the CV page.'));
   }
 
   function renderNewsEditor() {
     var item = findEditing();
     if (!item) { editing = null; render(); return; }
 
-    var back = el('button', 'editor-back', '← 목록으로 돌아가기');
-    back.addEventListener('click', function () { editing = null; render(); });
-    main.appendChild(back);
-    main.appendChild(el('h2', 'section-title', 'News 편집'));
+    backButton('CV');
+    sectionTitle('Edit CV entry');
 
-    main.appendChild(field('날짜', input(item.date, function (v) { item.date = v.trim(); }, '2026-12'),
-      '연-월(2026-12)이 기본입니다. 날짜까지 적으려면 2026-12-10, 연도만 적으려면 2026. 최신순 정렬과 Upcoming 표시에 쓰입니다.'));
+    main.appendChild(field('Date', input(item.date, function (v) { item.date = v.trim(); }, '2026-12'),
+      'Year-month (2026-12) by default — 2026-12-10 for a day, 2026 for a year only. Used for the order and the Upcoming mark.'));
 
-    main.appendChild(field('종류', select(item.kind || 'award', NEWS_KINDS, function (v) { item.kind = v; }),
-      '사이트에는 제목 아래 영문으로 표시됩니다 (Award · Conference …).'));
+    main.appendChild(field('Type', select(item.kind || 'award', NEWS_KINDS, function (v) { item.kind = v; }),
+      'Shown under the title (Award · Conference …).'));
 
-    main.appendChild(field('제목 (영문 권장)', input(item.title, function (v) { item.title = v; }, 'Student Volunteer, SIGGRAPH Asia 2026'),
-      '무엇을 했는지 한 줄로. 수상이면 상 이름, 학회면 맡은 역할과 학회 이름, 논문이면 논문 제목.'));
+    main.appendChild(field('Title', input(item.title, function (v) { item.title = v; }, 'Student Volunteer, SIGGRAPH Asia 2026'),
+      'One line — role first, as in a CV. Award: the award name. Conference: your role and the conference. Publication: the paper title.'));
 
-    main.appendChild(field('주최 · 장소 (선택)', input(item.venue, function (v) { item.venue = v; }, 'ACM SIGGRAPH, Tokyo'),
-      '주최 기관과 도시. 종류 옆에 한 줄로 붙습니다. 논문이면 학회·저널 이름과 상태 (예: Under review · CHI 2027 / Accepted · HCI Korea 2027).'));
+    main.appendChild(field('Organiser · place (optional)', input(item.venue, function (v) { item.venue = v; }, 'ACM SIGGRAPH, Tokyo'),
+      'Shown next to the type. Publication: the venue and status (Under review · CHI 2027 / Accepted · HCI Korea 2027).'));
 
-    main.appendChild(field('한 줄 설명 (선택)', input(item.note, function (v) { item.note = v; }, 'Selected as a student volunteer for the conference.'),
-      '필요할 때만 씁니다. 비워 두면 줄이 나오지 않습니다. 논문이면 저자 (예: Doyeon Lee, Co-author Name).'));
+    main.appendChild(field('Note (optional)', input(item.note, function (v) { item.note = v; }, 'Selected as a student volunteer for the conference.'),
+      'Only when needed — blank means no line. Publication: the authors (Doyeon Lee, Co-author Name).'));
 
-    main.appendChild(field('링크 (선택)', input(item.href, function (v) { item.href = v.trim(); }, 'https://…'),
-      '학회·공고·기사 주소. 넣으면 제목이 링크가 되고 옆에 ↗ 가 붙습니다. 논문이면 DOI 나 PDF 주소.'));
+    main.appendChild(field('Link (optional)', input(item.href, function (v) { item.href = v.trim(); }, 'https://…'),
+      'Makes the title a link, marked ↗. Publication: the DOI or PDF.'));
 
     /* 사진 — 여러 장 (상장, 현장 사진, 기사 캡처) */
     var iwrap = el('div');
     var ilist = el('div', 'media-list');
-    (item.images || []).forEach(function (src, i) {
+    item.images.forEach(function (src, i) {
       var row = el('div', 'media-row');
       var th = el('img', 'media-thumb');
       th.src = mediaUrl(src);
@@ -1261,9 +1224,9 @@
         item.images.splice(i + 1, 0, item.images.splice(i, 1)[0]);
         setDirty(); render();
       });
-      var rm = el('button', 'mini-btn danger', '삭제');
+      var rm = el('button', 'mini-btn danger', 'Delete');
       rm.addEventListener('click', function () {
-        if (src.indexOf('content/media/') === 0) apiDelete(src);
+        if (src.indexOf('content/media/') === 0) stageDelete(src);
         item.images.splice(i, 1);
         setDirty(); render();
       });
@@ -1272,127 +1235,32 @@
       ilist.appendChild(row);
     });
     iwrap.appendChild(ilist);
-    iwrap.appendChild(uploadButton('+ 사진 추가 (여러 장 선택 가능)', 'image/*', true, item.id, function (paths) {
-      item.images = (item.images || []).concat(paths);
+    var upRow = el('div', 'upload-row');
+    upRow.appendChild(uploadButton('+ Add photos', 'image/*', true, item.id, function (paths) {
+      item.images = item.images.concat(paths);
       setDirty(); render();
     }));
-    main.appendChild(field('사진 (선택 · 여러 장)', iwrap,
-      '목록 오른쪽에 작게 걸립니다 (모바일에서는 글 아래로 내려갑니다). 위에서부터 차례로 놓이고, 가로 사진이 잘 맞습니다.'));
+    iwrap.appendChild(upRow);
+    main.appendChild(field('Photos (optional)', iwrap,
+      'Small pictures on the right of the entry (below it on phones), in this order. Landscape pictures fit best.'));
 
     /* 관련 작품·연구 — 누르면 그 상세로 건너간다 */
     var relWrap = el('div', 'check-grid');
-    var pool = (DATA.works || []).map(function (w) { return ['작품 · ' + (w.title || w.id), w.id]; })
-      .concat((DATA.studies || []).map(function (s) { return ['연구 · ' + (s.title || s.id), s.id]; }));
+    var pool = DATA.works.map(function (w) { return ['Work · ' + (w.title || w.id), w.id]; })
+      .concat(DATA.studies.map(function (s) { return ['Research · ' + (s.title || s.id), s.id]; }));
     pool.forEach(function (o) {
-      relWrap.appendChild(checkbox((item.related || []).indexOf(o[1]) >= 0, function (on) {
-        var arr = (item.related || []).filter(function (k) { return k !== o[1]; });
+      relWrap.appendChild(checkbox(item.related.indexOf(o[1]) >= 0, function (on) {
+        var arr = item.related.filter(function (k) { return k !== o[1]; });
         if (on) arr.push(o[1]);
         item.related = arr;
       }, o[0]));
     });
-    if (!pool.length) relWrap.appendChild(el('p', 'field-hint', '등록된 작업·연구가 없습니다.'));
-    main.appendChild(field('관련 작품 · 연구 (선택)', relWrap,
-      '수상작이나 학회에 가져간 작업을 고르면, 이 소식 아래에 그 작품의 작은 미리보기가 걸리고 눌러서 상세 화면으로 갈 수 있습니다. 논문이면 그 연구를 고르세요 — 연구 상세 화면에 Publications 줄이 생깁니다.'));
+    if (!pool.length) relWrap.appendChild(el('p', 'field-hint', 'No works or research yet.'));
+    main.appendChild(field('Related works · research (optional)', relWrap,
+      'Adds a small linked preview under the entry. For a publication, pick its research — that research page then gets a Publications line.'));
   }
 
-  /* ----- 배포 (내 컴퓨터에서 연 관리도구 전용 — 웹에서는 저장이 곧 반영) ----- */
-
-  function renderDeploy() {
-    main.appendChild(el('h2', 'section-title', '배포 — 사이트에 반영하기'));
-
-    /* 1. 로컬 변경사항 (git) */
-    var gitBox = el('div', 'deploy-box');
-    main.appendChild(field('아직 사이트에 반영되지 않은 변경', gitBox,
-      '「변경사항 저장」으로 저장한 내용이 여기에 나타납니다. 반영하기를 누르면 GitHub에 올라가고 1분쯤 뒤 사이트에 반영됩니다.'));
-
-    /* 2. 반영 버튼 */
-    var ctl = el('div');
-    var msgIn = document.createElement('input');
-    msgIn.type = 'text';
-    msgIn.placeholder = '변경 내용 메모 (선택 — 예: 새 작업 추가)';
-    ctl.appendChild(msgIn);
-    var row = el('div', 'upload-row');
-    var depBtn = el('button', 'upload-btn deploy-btn', '사이트에 반영하기');
-    row.appendChild(depBtn);
-    var depState = el('span', 'deploy-state-msg', '');
-    row.appendChild(depState);
-    ctl.appendChild(row);
-    main.appendChild(field('반영', ctl));
-
-    /* 3. 사이트 주소 */
-    var site = el('p', 'deploy-note');
-    var link = el('a');
-    link.href = SITE_URL;
-    link.target = '_blank';
-    link.rel = 'noopener';
-    link.appendChild(el('u', null, SITE_URL.replace(/^https?:\/\//, '') + ' ↗'));
-    site.appendChild(link);
-    main.appendChild(field('사이트', site));
-
-    function loadGit() {
-      return fetch('/api/git-status').then(function (r) { return r.json(); }).then(function (j) {
-        gitBox.textContent = '';
-        if (!j.ok) { gitBox.appendChild(el('p', 'deploy-err', j.error || 'git 상태를 읽지 못했습니다')); return; }
-        if (j.files.length) {
-          var ul = el('div', 'deploy-files');
-          j.files.forEach(function (f) {
-            var mark = f.code === '??' || f.code === 'A' ? '+ ' : f.code === 'D' ? '− ' : '· ';
-            ul.appendChild(el('div', null, mark + f.path));
-          });
-          gitBox.appendChild(ul);
-        }
-        if (j.ahead > 0) {
-          gitBox.appendChild(el('p', 'deploy-note', '푸시되지 않은 커밋 ' + j.ahead + '개'));
-        }
-        if (!j.files.length && j.ahead === 0) {
-          gitBox.appendChild(el('p', 'deploy-note ok', '모든 변경이 반영되어 있습니다 ✓'));
-        }
-        if (j.last) {
-          gitBox.appendChild(el('p', 'deploy-last', '마지막 커밋: ' + j.last.subject + '  (' + j.last.hash + ')'));
-        }
-      }).catch(function () {
-        gitBox.textContent = '';
-        gitBox.appendChild(el('p', 'deploy-err', '서버에 연결하지 못했습니다'));
-      });
-    }
-
-    depBtn.addEventListener('click', function () {
-      if (dirty) { toast('먼저 우측 상단 「변경사항 저장」을 눌러 주세요'); return; }
-      if (uploading > 0) { toast('업로드가 끝난 뒤 다시 시도해 주세요'); return; }
-      depBtn.classList.add('busy');
-      depBtn.textContent = '반영 중…';
-      depState.textContent = 'GitHub에 올리는 중…';
-      api('/api/deploy', { method: 'POST', body: msgIn.value.trim() })
-        .then(function (j) {
-          depBtn.classList.remove('busy');
-          depBtn.textContent = '사이트에 반영하기';
-          if (!j.ok) { depState.textContent = ''; toast(j.error || '반영 실패'); return; }
-          if (j.nothing) { depState.textContent = ''; toast('반영할 변경사항이 없습니다'); return; }
-          msgIn.value = '';
-          depState.textContent = '사이트에 반영되는 중… (1분쯤)';
-          toast('GitHub에 올렸습니다 — 1분쯤 뒤 사이트에 반영됩니다');
-          loadGit();
-          fetch('/content/data.js', { cache: 'no-store' })
-            .then(function (r) { return r.text(); })
-            .then(function (text) {
-              watchLive(text, function (ok) {
-                depState.textContent = ok ? '사이트에 반영됨 ✓' : '반영 확인이 늦어집니다 — 사이트를 새로고침해 보세요';
-              });
-            });
-        })
-        .catch(function () {
-          depBtn.classList.remove('busy');
-          depBtn.textContent = '사이트에 반영하기';
-          depState.textContent = '';
-          toast('서버 연결 실패');
-        });
-    });
-
-    loadGit();
-    deployTimer = setInterval(loadGit, 8000);
-  }
-
-  /* ---------- 웹 모드 (GitHub Pages) ---------- */
+  /* ---------- 로그인 (GitHub 토큰) ---------- */
 
   function storage(key, value) {
     try {
@@ -1403,24 +1271,11 @@
     return null;
   }
 
-  function bootWeb() {
-    /* 웹에서는 저장이 곧 사이트 반영 — 배포 탭은 필요 없다 */
-    navBtns.forEach(function (b) { if (b.getAttribute('data-view') === 'deploy') b.style.display = 'none'; });
-    var help = document.querySelector('.side-help');
-    if (help) help.innerHTML = '수정 후 우측 상단<br>「변경사항 저장」을 누르면<br>1분쯤 뒤 사이트에 반영됩니다.';
-    var token = storage('gh-token');
-    if (!token) { showLogin(); return; }
-    connect(token).catch(function (e) {
-      if (e && e.handled) return;
-      showLogin(loginError(e));
-    });
-  }
-
   function loginError(e) {
-    if (e.status === 401) return '토큰이 올바르지 않거나 만료되었습니다 — 새로 만들어 붙여넣어 주세요';
-    if (e.status === 403) return '이 토큰으로는 저장할 수 없습니다 — 위 「토큰 만들기」로 새 토큰을 만들어 붙여넣어 주세요 · GitHub: ' + e.message;
-    if (e.status === 404) return '이 토큰으로는 저장소에 접근할 수 없습니다 — 위 「토큰 만들기」로 새 토큰을 만들어 붙여넣어 주세요';
-    return '로그인 실패: ' + e.message;
+    if (e.status === 401) return 'The token is wrong or has expired — create a new one and paste it here';
+    if (e.status === 403) return 'This token cannot save — create a new one with "Create token" above · GitHub: ' + e.message;
+    if (e.status === 404) return 'This token cannot reach the repository — create a new one with "Create token" above';
+    return 'Login failed: ' + e.message;
   }
 
   function connect(token) {
@@ -1443,22 +1298,22 @@
   function showLogin(msg) {
     banner.textContent = '';
     var box = el('div', 'login-box');
-    box.appendChild(el('p', 'login-title', '관리도구 로그인'));
-    var how = el('p', 'deploy-note');
+    box.appendChild(el('p', 'login-title', 'Admin login'));
+    var how = el('p', 'note');
     how.innerHTML =
-      '처음 한 번만 GitHub 토큰이 필요합니다.<br>' +
-      '1. <a href="' + TOKEN_URL + '" target="_blank" rel="noopener"><u>토큰 만들기 ↗</u></a> — 이름과 권한(public_repo)이 미리 채워져 있습니다<br>' +
-      '2. <b>Expiration</b>(유효기간)만 고르고 맨 아래 <b>Generate token</b><br>' +
-      '3. 나온 토큰(ghp_…)을 복사해서 아래에 붙여넣기 — 이 브라우저에만 저장됩니다';
+      'A GitHub token is needed once per browser.<br>' +
+      '1. <a href="' + TOKEN_URL + '" target="_blank" rel="noopener"><u>Create token ↗</u></a> — the name and permission (public_repo) are filled in<br>' +
+      '2. Choose an <b>Expiration</b>, then press <b>Generate token</b> at the bottom<br>' +
+      '3. Copy the token (ghp_…) and paste it below — it is kept only in this browser';
     box.appendChild(how);
     var tok = document.createElement('input');
     tok.type = 'password';
     tok.placeholder = 'ghp_…';
     tok.autocomplete = 'off';
     box.appendChild(tok);
-    var go = el('button', 'banner-retry', '로그인');
+    var go = el('button', 'banner-btn', 'Log in');
     box.appendChild(go);
-    var err = el('p', 'deploy-err', msg || '');
+    var err = el('p', 'err-note', msg || '');
     box.appendChild(err);
     function submit() {
       var t = tok.value.trim();
@@ -1480,10 +1335,10 @@
 
   function addLogout() {
     if (document.getElementById('logoutBtn')) return;
-    var b = el('button', 'bar-link', '로그아웃');
+    var b = el('button', 'bar-link', 'Log out');
     b.id = 'logoutBtn';
     b.addEventListener('click', function () {
-      if (dirty && !window.confirm('저장하지 않은 변경사항이 사라집니다. 로그아웃할까요?')) return;
+      if (dirty && !window.confirm('Unsaved changes will be lost. Log out?')) return;
       storage('gh-token', null);
       dirty = false;
       location.reload();
@@ -1499,13 +1354,15 @@
       var b = text.lastIndexOf('}');
       DATA = JSON.parse(text.slice(a, b + 1));
     } catch (e) {
-      showBanner(LOCAL ? [
-        'content/data.js 파일을 읽는 중 문제가 발생했습니다.',
-        'content/backups 폴더의 가장 최근 백업 파일을 복사해서 content/data.js 를 덮어쓰면 복구됩니다.'
-      ] : [
-        'content/data.js 파일을 읽는 중 문제가 발생했습니다.',
-        'GitHub 저장소의 커밋 기록(History)에서 이전 버전으로 되돌리면 복구됩니다.'
-      ]);
+      banner.textContent = '';
+      var box = el('div');
+      box.appendChild(el('p', null, 'content/data.js could not be read.'));
+      box.appendChild(el('p', null, 'Restore an earlier version from its History in the GitHub repository.'));
+      var retry = el('button', 'banner-btn', 'Try again');
+      retry.addEventListener('click', function () { location.reload(); });
+      box.appendChild(retry);
+      banner.appendChild(box);
+      banner.hidden = false;
       throw { handled: true };
     }
     DATA.works = DATA.works || [];
@@ -1537,66 +1394,10 @@
     render();
   }
 
-
-  function showBanner(lines, showRetry) {
-    banner.textContent = '';
-    var box = el('div');
-    lines.forEach(function (ln) { box.appendChild(el('p', null, ln)); });
-    if (showRetry !== false) {
-      var btn = el('button', 'banner-retry', '다시 시도');
-      btn.addEventListener('click', function () { location.reload(); });
-      box.appendChild(btn);
-    }
-    banner.appendChild(box);
-    banner.hidden = false;
-  }
-
-  /* 서버가 늦게 뜨는 경우를 위해 3초간 재시도한 뒤에만 오류를 보여준다 */
-  function pingRetry(tries) {
-    return fetch('/api/ping', { cache: 'no-store' })
-      .then(function (r) { return r.json(); })
-      .then(function (j) { if (!j || !j.ok) throw new Error('ping'); })
-      .catch(function (e) {
-        if (tries <= 1) throw e;
-        return new Promise(function (res) { setTimeout(res, 500); })
-          .then(function () { return pingRetry(tries - 1); });
-      });
-  }
-
-  function boot() {
-    if (location.protocol === 'file:') {
-      showBanner([
-        '이 페이지는 파일로 직접 열 수 없습니다.',
-        '사이트 폴더의 관리도구.bat 을 더블클릭해서 열어 주세요.'
-      ], false);
-      return;
-    }
-    if (!LOCAL) { bootWeb(); return; }
-    pingRetry(6)
-      .catch(function () {
-        showBanner([
-          '로컬 서버에 연결하지 못했습니다.',
-          '사이트 폴더의 관리도구.bat 을 더블클릭해서 다시 열어 주세요.',
-          '검은 서버 창이 열려 있어야 저장·업로드가 됩니다.'
-        ]);
-        throw { handled: true };
-      })
-      .then(function () {
-        return fetch('/content/data.js?ts=' + Date.now(), { cache: 'no-store' }).then(function (r) {
-          if (!r.ok) throw new Error('data.js HTTP ' + r.status);
-          return r.text();
-        });
-      })
-      .then(start)
-      .catch(function (e) {
-        if (!e || e.handled !== true) {
-          showBanner([
-            '데이터를 불러오지 못했습니다.',
-            '검은 서버 창이 열려 있는지 확인한 뒤 다시 시도해 주세요.'
-          ]);
-        }
-      });
-  }
-
-  boot();
+  var token = storage('gh-token');
+  if (!token) showLogin();
+  else connect(token).catch(function (e) {
+    if (e && e.handled) return;
+    showLogin(loginError(e));
+  });
 })();

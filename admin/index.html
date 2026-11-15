@@ -1,43 +1,47 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>관리도구 — Portfolio</title>
+  <title>Admin — Doyeon Lee Portfolio</title>
   <meta name="robots" content="noindex, nofollow">
   <link rel="icon" href="../favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="admin.css?v=13">
+  <link rel="stylesheet" href="admin.css?v=14">
 </head>
 <body>
-  <div id="offlineBanner" class="offline-banner" hidden>
-    이 페이지는 로컬 서버가 필요합니다 — 사이트 폴더의 <b>관리도구.bat</b> 을 더블클릭해서 열어 주세요.
-  </div>
+  <div id="banner" class="banner" hidden></div>
 
+  <!-- 사이트와 같은 틀 — 이름을 누르면 Home, 왼쪽은 사이트 메뉴와 같은 순서 -->
   <header class="bar">
-    <span class="bar-title">관리도구</span>
+    <button id="siteName" class="site-name" data-view="home">PORTFOLIO</button>
+    <span class="bar-tag">Admin</span>
     <span id="saveStatus" class="save-status"></span>
     <span class="bar-spacer"></span>
-    <a href="/" target="_blank" class="bar-link">사이트 보기 ↗</a>
-    <button id="saveBtn" class="save-btn">변경사항 저장</button>
+    <a id="siteLink" href="/" target="_blank" rel="noopener" class="bar-link">View site ↗</a>
+    <button id="saveBtn" class="save-btn">Save</button>
   </header>
 
-  <nav class="side">
-    <button data-view="basic" class="side-link">기본 정보</button>
+  <nav class="side" aria-label="Menu">
     <button data-view="works" class="side-link">Works</button>
     <button data-view="studies" class="side-link">Research</button>
-    <button data-view="news" class="side-link">CV</button>
-    <button data-view="deploy" class="side-link">배포</button>
-    <p class="side-help">
-      수정 후 반드시 우측 상단<br>「변경사항 저장」을 눌러 주세요.<br><br>
-      저장하면 미리보기 탭을<br>새로고침해서 확인할 수 있습니다.<br><br>
-      실제 사이트에 올리려면<br>「배포」 탭에서<br>반영하기를 누르세요.
-    </p>
+    <button data-view="cv" class="side-link">CV</button>
+    <button data-view="about" class="side-link">About</button>
+    <button data-view="contact" class="side-link">Contact</button>
+    <p class="side-help">Edit, then press Save<br>(top right, or Ctrl+S).<br><br>The live site updates<br>about a minute later.</p>
   </nav>
 
   <main id="main" class="main"></main>
 
+  <!-- 사이트와 같은 석고 입자 선 (활성 메뉴 선 · 이름표 아치) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <filter id="grainEdge" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.72" numOctaves="2" seed="7" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="2.6" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </svg>
+
   <!-- 관리도구 파일을 고치면 ?v= 숫자를 올린다 — GitHub Pages 는 10분 캐시라 안 올리면 옛 코드가 돈다 -->
-  <script src="github.js?v=13"></script>
-  <script src="admin.js?v=13"></script>
+  <script src="github.js?v=14"></script>
+  <script src="admin.js?v=14"></script>
 </body>
 </html>
