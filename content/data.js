@@ -416,7 +416,7 @@ window.SITE_DATA = {
     },
     {
       "id": "bojagi",
-      "title": "Bojagi",
+      "title": "Jogakbo",
       "year": "2026",
       "cover": "content/media/bojagi/b-4k.png",
       "media": [
