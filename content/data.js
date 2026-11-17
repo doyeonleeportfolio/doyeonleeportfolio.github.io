@@ -426,7 +426,7 @@ window.SITE_DATA = {
           "caption": ""
         }
       ],
-      "description": "Jogakbo is a traditional Korean wrapping cloth made by piecing together leftover fabric scraps. In this artwork, delicate silk pieces allow light to filter through, deepening in shade only where the layers overlap. As a wave of stitching sweeps from left to right, pressed petals, pearls, and beads attach to each fragment in turn, only to gently unravel. In this seamlessly looping video, the cloth never truly ends, no matter where you begin watching. Its form was calculated through code, while the fabric textures were rendered using generative AI.",
+      "description": "Jogakbo is a traditional Korean wrapping cloth made by piecing together leftover fabric scraps. In this artwork, delicate silk pieces allow light to filter through, deepening in shade only where the layers overlap. As a wave of stitching sweeps from left to right, pressed petals, pearls, and beads attach to each fragment in turn, only to gently unravel. In this seamlessly looping video, the cloth never truly ends, no matter where you begin watching. Its form was calculated through code. ",
       "links": [],
       "medium": "Single channel video ",
       "duration": "0:55",
